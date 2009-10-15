@@ -1,0 +1,5 @@
+(setq c-basic-offset 2)
+(setq c-offsets-alist '((substatement-open . 0)
+                        (case-label . +)
+                        (brace-list-open . 0)
+                        (statement-case-open . 0)))
