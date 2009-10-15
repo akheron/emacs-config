@@ -14,12 +14,7 @@
                         :box nil)
    (set-face-attribute 'cursor nil
                         :background "white"
-                        :foreground "black")
-
-    ;; Resize the frame to 80x65 characters
-    (add-hook 'after-init-hook
-              #'(lambda ()
-                  (modify-frame-parameters nil '((width . 80) (height . 65))))))
+                        :foreground "black"))
 
   ;; Running in console
   (progn
