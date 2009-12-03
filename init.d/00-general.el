@@ -20,6 +20,7 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
+(transient-mark-mode -1)
 (mouse-avoidance-mode 'jump)
 
 ;; Start server after initialization
