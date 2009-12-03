@@ -1,8 +1,8 @@
-(require 'js2-mode)
+;; (require 'js2-mode)
 
-(setq auto-mode-alist (cons '("\\.js$" . js2-mode) auto-mode-alist))
+;; (setq auto-mode-alist (cons '("\\.js$" . js2-mode) auto-mode-alist))
 
-(add-hook 'js2-mode-hook
-          #'(lambda ()
-              (setq js2-basic-offset 4)
-              (setq js2-mirror-mode nil)))
+;; (add-hook 'js2-mode-hook
+;;           #'(lambda ()
+;;               (setq js2-basic-offset 4)
+;;               (setq js2-mirror-mode nil)))
