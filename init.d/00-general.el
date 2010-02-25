@@ -22,5 +22,8 @@
 (menu-bar-mode -1)
 (mouse-avoidance-mode 'jump)
 
+;; Disable abbrev-mode
+(setq-default abbrev-mode nil)
+
 ;; Start server after initialization
 (add-hook 'after-init-hook 'server-start)
