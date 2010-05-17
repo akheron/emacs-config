@@ -1,4 +1,3 @@
-;(load "python.el")
 (require 'python)
 
 (add-hook 'python-mode-hook
@@ -8,6 +7,7 @@
       (define-key python-mode-map (kbd "C-c C-:") 'python-shift-right)
       (define-key python-mode-map (kbd "C-c C-c") 'comment-region)
       (define-key python-mode-map (kbd "C-c C-u") 'uncomment-region)
+      (abbrev-mode -1)
       (turn-off-auto-fill)))
 
 (add-to-list 'auto-mode-alist '("\\.py$" . python-mode))
