@@ -75,6 +75,11 @@
   (define-key js2-mode-map [(control meta q)] 'my-indent-sexp)
   (if (featurep 'js2-highlight-vars)
     (js2-highlight-vars-mode))
+
+  ; don't insert anything automatically as I type
+  (js2-leave-mirror-mode)
+  (setq js2-auto-insert-catch-block nil)
+
   (message "My JS2 hook"))
 
 (add-hook 'js2-mode-hook 'my-js2-mode-hook)
