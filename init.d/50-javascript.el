@@ -78,7 +78,8 @@
 
   ; don't insert anything automatically as I type
   (js2-leave-mirror-mode)
-  (setq js2-auto-insert-catch-block nil)
+  (setq js2-auto-insert-catch-block nil
+        c-hungry-delete-key nil)
 
   (message "My JS2 hook"))
 
