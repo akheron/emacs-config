@@ -25,3 +25,6 @@
 
 ;; Disable abbrev-mode
 (setq-default abbrev-mode nil)
+
+;; By default, disable flymake for all files
+(setq flymake-allowed-file-name-masks '())
