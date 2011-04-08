@@ -6,7 +6,9 @@
       (define-key python-mode-map (kbd "C-c C-;") 'python-indent-shift-left)
       (define-key python-mode-map (kbd "C-c C-:") 'python-indent-shift-right)
       (define-key python-mode-map (kbd "C-c C-c") 'comment-region)
-      (define-key python-mode-map (kbd "C-c C-u") 'uncomment-region)))
+      (define-key python-mode-map (kbd "C-c C-u") 'uncomment-region)
+      (define-key python-mode-map (kbd "C-c C-n") 'flymake-goto-next-error)
+      (define-key python-mode-map (kbd "C-c C-p") 'flymake-goto-prev-error)))
 
 
 (when (load "flymake" t)
