@@ -1,5 +1,5 @@
 ; https://github.com/fgallina/python.el
-; commit fbaaaf9477cf77fb076b on 2011-03-07
+; commit 211971d6 on 2011-04-11
 
 ;;; python.el -- Python's flying circus support for Emacs
 
@@ -37,7 +37,7 @@
 
 ;; Implements Syntax highlighting, Indentation, Movement, Shell
 ;; interaction, Shell completion, Pdb tracking, Symbol completion,
-;; Skeletons, FFAP, Code Check, Eldoc.
+;; Skeletons, FFAP, Code Check, Eldoc, imenu.
 
 ;; Syntax highlighting: Fontification of code is provided and supports
 ;; python's triple quoted strings properly.
@@ -49,8 +49,7 @@
 ;; causes the current line to be dedented automatically if needed.
 
 ;; Movement: `beginning-of-defun' and `end-of-defun' functions are
-;; properly implemented.  A `beginning-of-innermost-defun' is defined
-;; to navigate nested defuns.
+;; properly implemented.
 
 ;; Shell interaction: is provided and allows you easily execute any
 ;; block of code of your current buffer in an inferior Python process.
@@ -120,13 +119,18 @@
 ;; out of the box.  This feature needs an inferior python shell
 ;; running.
 
-;; Code check: Check the current file for errors using
-;; `python-check-command'
+;; Code check: Check the current file for errors with `python-check'
+;; using the program defined in `python-check-command'.
 
 ;; Eldoc: returns documentation for object at point by using the
 ;; inferior python subprocess to inspect its documentation.  As you
 ;; might guessed you should run `python-shell-send-buffer' from time
 ;; to time to get better results too.
+
+;; imenu: This mode supports imenu. It builds a plain or tree menu
+;; depending on the value of `python-imenu-make-tree'. Also you can
+;; customize if menu items should include its type using
+;; `python-imenu-include-defun-type'.
 
 ;; If you used python-mode.el you probably will miss auto-indentation
 ;; when inserting newlines.  To achieve the same behavior you have
@@ -227,8 +231,6 @@
 	"-"
 	["Start of def/class" beginning-of-defun
 	 :help "Go to start of outermost definition around point"]
-	["Start of def/class" python-beginning-of-innermost-defun
-	 :help "Go to start of innermost definition around point"]
 	["End of def/class" end-of-defun
 	 :help "Go to end of definition around point"]
         "-"
@@ -269,7 +271,10 @@
                                    (or "def" "class" "if" "elif" "else" "try"
                                        "except" "finally" "for" "while" "with")
                                    symbol-end))
+     `(decorator            . ,(rx line-start (* space) ?@ (any letter ?_)
+                                    (* (any word ?_))))
      `(defun                . ,(rx symbol-start (or "def" "class") symbol-end))
+     `(symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
      `(open-paren           . ,(rx (or "{" "[" "(")))
      `(close-paren          . ,(rx (or "}" "]" ")")))
      `(simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
@@ -873,94 +878,85 @@ With numeric ARG, just insert that many colons.  With
 
 ;;; Navigation
 
-(defvar python-beginning-of-defun-regexp
-  "^\\(def\\|class\\)[[:space:]]+[[:word:]]+"
-  "Regular expresion matching beginning of outermost class or function.")
+(defvar python-nav-beginning-of-defun-regexp
+  (python-rx line-start (* space) defun (+ space) (group symbol-name))
+  "Regular expresion matching beginning of class or function.
+The name of the defun should be grouped so it can be retrieved
+via `match-string'.")
 
-(defvar python-beginning-of-innermost-defun-regexp
-  "^[[:space:]]*\\(def\\|class\\)[[:space:]]+[[:word:]]+"
-  "Regular expresion matching beginning of innermost class or function.")
-
-(defun python-beginning-of-defun (&optional innermost)
-  "Move point to the beginning of innermost/outermost def or class.
-If INNERMOST is non-nil then move to the beginning of the
-innermost definition."
-  (let ((starting-point (point-marker))
-        (nonblank-line-indent)
-        (defun-indent)
-        (defun-point)
-        (regexp (if innermost
-                    python-beginning-of-innermost-defun-regexp
-                  python-beginning-of-defun-regexp)))
-    (back-to-indentation)
-    (if (and (not (looking-at "@"))
-             (not (looking-at regexp)))
-        (forward-comment -1)
-      (while (and (not (eobp))
-                  (forward-line 1)
-                  (not (back-to-indentation))
-                  (looking-at "@"))))
-    (when (not (looking-at regexp))
-        (re-search-backward regexp nil t))
-    (setq nonblank-line-indent (+ (current-indentation) python-indent-offset))
-    (setq defun-indent (current-indentation))
-    (setq defun-point (point-marker))
-    (if (> nonblank-line-indent defun-indent)
+(defun python-nav-beginning-of-defun (&optional nodecorators)
+  "Move point to `beginning-of-defun'.
+When NODECORATORS is non-nil decorators are not included.  This
+is the main part of`python-beginning-of-defun-function'
+implementation.  Return non-nil if point is moved to the
+`beginning-of-defun'."
+  (let ((indent-pos (save-excursion
+                      (back-to-indentation)
+                      (point-marker)))
+        (found)
+        (include-decorators
+         (lambda ()
+           (when (not nodecorators)
+             (when (save-excursion
+                     (forward-line -1)
+                     (looking-at (python-rx decorator)))
+               (while (and (not (bobp))
+                           (forward-line -1)
+                           (looking-at (python-rx decorator))))
+               (when (not (bobp)) (forward-line 1)))))))
+    (if (and (> (point) indent-pos)
+             (save-excursion
+               (goto-char (line-beginning-position))
+               (looking-at python-nav-beginning-of-defun-regexp)))
         (progn
-          (goto-char defun-point)
-          (forward-line -1)
-          (while (and (looking-at "@")
-                      (forward-line -1)
-                      (not (bobp))
-                      (not (back-to-indentation))))
-          (unless (bobp)
-            (forward-line 1))
-          (point-marker))
-      (if innermost
-          (python-beginning-of-defun)
-        (goto-char starting-point)
-        nil))))
+          (goto-char (line-beginning-position))
+          (funcall include-decorators)
+          (setq found t))
+      (goto-char (line-beginning-position))
+      (when (re-search-backward python-nav-beginning-of-defun-regexp nil t)
+        (setq found t))
+      (goto-char (or (python-info-ppss-context 'string) (point)))
+      (funcall include-decorators))
+    found))
 
-(defun python-beginning-of-defun-function ()
-  "Move point to the beginning of outermost def or class.
-Returns nil if point is not in a def or class."
-  (python-beginning-of-defun nil))
-
-(defun python-beginning-of-innermost-defun ()
-  "Move point to the beginning of innermost def or class.
-Returns nil if point is not in a def or class."
-  (interactive)
-  (python-beginning-of-defun t))
+(defun python-beginning-of-defun-function (&optional arg nodecorators)
+  "Move point to the beginning of def or class.
+With positive ARG move that number of functions forward.  With
+negative do the same but backwards.  When NODECORATORS is non-nil
+decorators are not included.  Return non-nil if point is moved to the
+`beginning-of-defun'."
+  (when (or (null arg) (= arg 0)) (setq arg 1))
+  (if (> arg 0)
+      (dotimes (i arg (python-nav-beginning-of-defun nodecorators)))
+    (let ((found))
+      (dotimes (i (- arg) found)
+        (python-end-of-defun-function)
+        (forward-comment 1)
+        (goto-char (line-end-position))
+        (when (not (eobp))
+          (setq found
+                (python-nav-beginning-of-defun nodecorators)))))))
 
 (defun python-end-of-defun-function ()
   "Move point to the end of def or class.
 Returns nil if point is not in a def or class."
-  (let ((starting-point (point-marker))
-        (defun-regexp (python-rx defun))
-        (beg-defun-indent))
-    (back-to-indentation)
-    (if (looking-at "@")
-	(while (and (not (eobp))
-		    (forward-line 1)
-		    (not (back-to-indentation))
-		    (looking-at "@")))
-      (while (and (not (bobp))
-		  (not (progn (back-to-indentation) (current-word)))
-		  (forward-line -1))))
-    (when (or (not (equal (current-indentation) 0))
-              (string-match defun-regexp (current-word)))
-      (setq beg-defun-indent (save-excursion
-        		       (or (looking-at defun-regexp)
-        			   (python-beginning-of-innermost-defun))
-        		       (current-indentation)))
-      (while (and (forward-line 1)
-        	  (not (eobp))
-        	  (or (not (current-word))
-                      (> (current-indentation) beg-defun-indent))))
-      (while (and (forward-comment -1)
-        	  (not (bobp))))
-      (forward-line 1)
-      (point-marker))))
+  (interactive)
+  (let ((beg-defun-indent)
+        (decorator-regexp "[[:space:]]*@"))
+    (when (looking-at decorator-regexp)
+      (while (and (not (eobp))
+                  (forward-line 1)
+                  (looking-at decorator-regexp))))
+    (when (not (looking-at python-nav-beginning-of-defun-regexp))
+      (python-beginning-of-defun-function))
+    (setq beg-defun-indent (current-indentation))
+    (forward-line 1)
+    (while (and (forward-line 1)
+                (not (eobp))
+                (or (not (current-word))
+                    (> (current-indentation) beg-defun-indent))))
+    (forward-comment 1)
+    (goto-char (line-beginning-position))))
 
 
 ;;; Shell integration
@@ -1159,13 +1155,13 @@ run).
          (proc-buffer-name (format "*%s*" proc-name))
          (process-environment
           (if python-shell-process-environment
-              (merge 'list python-shell-process-environment
-                     process-environment 'string=)
+              (python-util-merge 'list python-shell-process-environment
+                                 process-environment 'string=)
             process-environment))
          (exec-path
           (if python-shell-exec-path
-              (merge 'list python-shell-exec-path
-                     exec-path 'string=)
+              (python-util-merge 'list python-shell-exec-path
+                                 exec-path 'string=)
             exec-path)))
     (when (not (comint-check-proc proc-buffer-name))
       (let ((cmdlist (split-string-and-unquote cmd)))
@@ -1275,18 +1271,17 @@ the output."
     (python-shell-send-region (point-min) (point-max))))
 
 (defun python-shell-send-defun (arg)
-  "Send the (inner|outer)most def or class to inferior Python process.
+  "Send the current defun to inferior Python process.
 When argument ARG is non-nil sends the innermost defun."
   (interactive "P")
   (save-excursion
-    (python-shell-send-region (progn
-                            (or (if arg
-                                    (python-beginning-of-innermost-defun)
-                                  (python-beginning-of-defun-function))
-                                (progn (beginning-of-line) (point-marker))))
-                          (progn
-                            (or (python-end-of-defun-function)
-                                (progn (end-of-line) (point-marker)))))))
+    (python-shell-send-region
+     (progn
+       (or (python-beginning-of-defun-function)
+           (progn (beginning-of-line) (point-marker))))
+     (progn
+       (or (python-end-of-defun-function)
+           (progn (end-of-line) (point-marker)))))))
 
 (defun python-shell-send-file (file-name &optional process temp-file-name)
   "Send FILE-NAME to inferior Python PROCESS.
@@ -1525,6 +1520,38 @@ inferior python process is updated properly."
 
 ;;; Fill paragraph
 
+(defcustom python-fill-comment-function 'python-fill-comment
+  "Function to fill comments.
+This is the function used by `python-fill-paragraph-function' to
+fill comments."
+  :type 'symbol
+  :group 'python
+  :safe 'symbolp)
+
+(defcustom python-fill-string-function 'python-fill-string
+  "Function to fill strings.
+This is the function used by `python-fill-paragraph-function' to
+fill strings."
+  :type 'symbol
+  :group 'python
+  :safe 'symbolp)
+
+(defcustom python-fill-decorator-function 'python-fill-decorator
+  "Function to fill decorators.
+This is the function used by `python-fill-paragraph-function' to
+fill decorators."
+  :type 'symbol
+  :group 'python
+  :safe 'symbolp)
+
+(defcustom python-fill-paren-function 'python-fill-paren
+  "Function to fill parens.
+This is the function used by `python-fill-paragraph-function' to
+fill parens."
+  :type 'symbol
+  :group 'python
+  :safe 'symbolp)
+
 (defun python-fill-paragraph-function (&optional justify)
   "`fill-paragraph-function' handling multi-line strings and possibly comments.
 If any of the current line is in or at the end of a multi-line string,
@@ -1536,81 +1563,102 @@ Optional argument JUSTIFY defines if the paragraph should be justified."
     (back-to-indentation)
     (cond
      ;; Comments
-     ((fill-comment-paragraph justify))
-     ;; Docstrings
+     ((funcall python-fill-comment-function justify))
+     ;; Strings/Docstrings
      ((save-excursion (skip-chars-forward "\"'uUrR")
                       (python-info-ppss-context 'string))
-      (let ((marker (point-marker))
-            (string-start-marker
-             (progn
-               (skip-chars-forward "\"'uUrR")
-               (goto-char (python-info-ppss-context 'string))
-               (skip-chars-forward "\"'uUrR")
-               (point-marker)))
-            (reg-start (line-beginning-position))
-            (string-end-marker
-             (progn
-               (while (python-info-ppss-context 'string)
-                 (goto-char (1+ (point-marker))))
-               (skip-chars-backward "\"'")
-               (point-marker)))
-            (reg-end (line-end-position))
-            (fill-paragraph-function))
-        (save-restriction
-          (narrow-to-region reg-start reg-end)
-          (save-excursion
-            (goto-char string-start-marker)
-            (delete-region (point-marker) (progn
-                                            (skip-syntax-forward "> ")
-                                            (point-marker)))
-            (goto-char string-end-marker)
-            (delete-region (point-marker) (progn
-                                            (skip-syntax-backward "> ")
-                                            (point-marker)))
-            (save-excursion
-              (goto-char marker)
-              (fill-paragraph justify))
-            ;; If there is a newline in the docstring lets put triple
-            ;; quote in it's own line to follow pep 8
-            (when (save-excursion
-                    (re-search-backward "\n" string-start-marker t))
-              (newline)
-              (newline-and-indent))
-            (fill-paragraph justify)))) t)
+      (funcall python-fill-string-function justify))
      ;; Decorators
      ((equal (char-after (save-excursion
                            (back-to-indentation)
-                           (point-marker))) ?@) t)
+                           (point-marker))) ?@)
+      (funcall python-fill-decorator-function justify))
      ;; Parens
      ((or (python-info-ppss-context 'paren)
           (looking-at (python-rx open-paren))
           (save-excursion
             (skip-syntax-forward "^(" (line-end-position))
             (looking-at (python-rx open-paren))))
-      (save-restriction
-        (narrow-to-region (progn
-                            (while (python-info-ppss-context 'paren)
-                              (goto-char (1- (point-marker))))
-                            (point-marker)
-                            (line-beginning-position))
-                          (progn
-                            (when (not (python-info-ppss-context 'paren))
-                              (end-of-line)
-                              (when (not (python-info-ppss-context 'paren))
-                                (skip-syntax-backward "^)")))
-                            (while (python-info-ppss-context 'paren)
-                              (goto-char (1+ (point-marker))))
-                            (point-marker)))
-        (let ((paragraph-start "\f\\|[ \t]*$")
-              (paragraph-separate ",")
-              (fill-paragraph-function))
-          (goto-char (point-min))
-          (fill-paragraph justify))
-        (while (not (eobp))
-          (forward-line 1)
-          (python-indent-line)
-          (goto-char (line-end-position)))) t)
+      (funcall python-fill-paren-function justify))
      (t t))))
+
+(defun python-fill-comment (&optional justify)
+  "Comment fill function for `python-fill-paragraph-function'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  (fill-comment-paragraph justify))
+
+(defun python-fill-string (&optional justify)
+  "String fill function for `python-fill-paragraph-function'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  (let ((marker (point-marker))
+        (string-start-marker
+         (progn
+           (skip-chars-forward "\"'uUrR")
+           (goto-char (python-info-ppss-context 'string))
+           (skip-chars-forward "\"'uUrR")
+           (point-marker)))
+        (reg-start (line-beginning-position))
+        (string-end-marker
+         (progn
+           (while (python-info-ppss-context 'string)
+             (goto-char (1+ (point-marker))))
+           (skip-chars-backward "\"'")
+           (point-marker)))
+        (reg-end (line-end-position))
+        (fill-paragraph-function))
+    (save-restriction
+      (narrow-to-region reg-start reg-end)
+      (save-excursion
+        (goto-char string-start-marker)
+        (delete-region (point-marker) (progn
+                                        (skip-syntax-forward "> ")
+                                        (point-marker)))
+        (goto-char string-end-marker)
+        (delete-region (point-marker) (progn
+                                        (skip-syntax-backward "> ")
+                                        (point-marker)))
+        (save-excursion
+          (goto-char marker)
+          (fill-paragraph justify))
+        ;; If there is a newline in the docstring lets put triple
+        ;; quote in it's own line to follow pep 8
+        (when (save-excursion
+                (re-search-backward "\n" string-start-marker t))
+          (newline)
+          (newline-and-indent))
+        (fill-paragraph justify)))) t)
+
+(defun python-fill-decorator (&optional justify)
+  "Decorator fill function for `python-fill-paragraph-function'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  t)
+
+(defun python-fill-paren (&optional justify)
+  "Paren fill function for `python-fill-paragraph-function'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  (save-restriction
+    (narrow-to-region (progn
+                        (while (python-info-ppss-context 'paren)
+                          (goto-char (1- (point-marker))))
+                        (point-marker)
+                        (line-beginning-position))
+                      (progn
+                        (when (not (python-info-ppss-context 'paren))
+                          (end-of-line)
+                          (when (not (python-info-ppss-context 'paren))
+                            (skip-syntax-backward "^)")))
+                        (while (python-info-ppss-context 'paren)
+                          (goto-char (1+ (point-marker))))
+                        (point-marker)))
+    (let ((paragraph-start "\f\\|[ \t]*$")
+          (paragraph-separate ",")
+          (fill-paragraph-function))
+      (goto-char (point-min))
+      (fill-paragraph justify))
+    (while (not (eobp))
+      (forward-line 1)
+      (python-indent-line)
+      (goto-char (line-end-position)))) t)
 
 
 ;;; Skeletons
@@ -1903,25 +1951,150 @@ Interactively, prompt for symbol."
               (help-print-return-message)))))))
 
 
+;;; Imenu
+
+(defcustom python-imenu-include-defun-type t
+  "Non-nil make imenu items to include its type."
+  :type 'boolean
+  :group 'python
+  :safe 'booleanp)
+
+(defcustom python-imenu-make-tree t
+  "Non-nil make imenu to build a tree menu.
+Set to nil for speed."
+  :type 'boolean
+  :group 'python
+  :safe 'booleanp)
+
+(defcustom python-imenu-subtree-root-label "<Jump to %s>"
+  "Label displayed to navigate to root from a subtree.
+It can contain a \"%s\" which will be replaced with the root name."
+  :type 'string
+  :group 'python
+  :safe 'stringp)
+
+(defvar python-imenu-index-alist nil
+  "Calculated index tree for imenu.")
+
+(defun python-imenu-tree-assoc (keylist tree)
+  "Using KEYLIST traverse TREE."
+  (if keylist
+      (python-imenu-tree-assoc (cdr keylist)
+                               (ignore-errors (assoc (car keylist) tree)))
+    tree))
+
+(defun python-imenu-make-element-tree (element-list full-element plain-index)
+  "Make a tree from plain alist of module names.
+ELEMENT-LIST is the defun name splitted by \".\" and FULL-ELEMENT
+is the same thing, the difference is that FULL-ELEMENT remains
+untouched in all recursive calls.
+Argument PLAIN-INDEX is the calculated plain index used to build the tree."
+  (when (not (python-imenu-tree-assoc full-element python-imenu-index-alist))
+    (when element-list
+      (let* ((subelement-point (cdr (assoc
+                                     (mapconcat #'identity full-element ".")
+                                     plain-index)))
+             (subelement-name (car element-list))
+             (subelement-position (python-util-position
+                                   subelement-name full-element))
+             (subelement-path (when subelement-position
+                                (butlast
+                                 full-element
+                                 (- (length full-element)
+                                    subelement-position)))))
+        (let ((path-ref (python-imenu-tree-assoc subelement-path
+                                                 python-imenu-index-alist)))
+          (if (not path-ref)
+              (push (cons subelement-name subelement-point)
+                    python-imenu-index-alist)
+            (when (not (listp (cdr path-ref)))
+              ;; Modifiy root cdr to be a list
+              (setcdr path-ref
+                      (list (cons (format python-imenu-subtree-root-label
+                                          (car path-ref))
+                                  (cdr (assoc
+                                        (mapconcat #'identity
+                                                   subelement-path ".")
+                                        plain-index))))))
+            (when (not (assoc subelement-name path-ref))
+              (push (cons subelement-name subelement-point) (cdr path-ref))))))
+      (python-imenu-make-element-tree (cdr element-list)
+                                      full-element plain-index))))
+
+(defun python-imenu-make-tree (index)
+"Build the imenu alist tree from plain INDEX.
+
+The idea of this function is that given the alist:
+
+ '((\"Test\" . 100)
+   (\"Test.__init__\" . 200)
+   (\"Test.some_method\" . 300)
+   (\"Test.some_method.another\" . 400)
+   (\"Test.something_else\" . 500)
+   (\"test\" . 600)
+   (\"test.reprint\" . 700)
+   (\"test.reprint\" . 800))
+
+This tree gets built:
+
+ '((\"Test\" . ((\"jump to...\" . 100)
+                (\"__init__\" . 200)
+                (\"some_method\" . ((\"jump to...\" . 300)
+                                    (\"another\" . 400)))
+                (\"something_else\" . 500)))
+   (\"test\" . ((\"jump to...\" . 600)
+                (\"reprint\" . 700)
+                (\"reprint\" . 800))))
+
+Internally it uses `python-imenu-make-element-tree' to create all
+branches for each element."
+(setq python-imenu-index-alist nil)
+(mapc (lambda (element)
+        (python-imenu-make-element-tree element element index))
+      (mapcar (lambda (element)
+              (split-string (car element) "\\." t)) index))
+python-imenu-index-alist)
+
+(defun python-imenu-create-index ()
+  "`imenu-create-index-function' for Python."
+  (let ((index))
+    (goto-char (point-max))
+    (while (python-beginning-of-defun-function 1 t)
+      (let ((defun-dotted-name
+              (python-info-current-defun python-imenu-include-defun-type)))
+        (push (cons defun-dotted-name (point)) index)))
+    (if python-imenu-make-tree
+        (python-imenu-make-tree index)
+      index)))
+
+
 ;;; Misc helpers
 
-(defun python-info-current-defun ()
+(defun python-info-current-defun (&optional include-type)
   "Return name of surrounding function with Python compatible dotty syntax.
+Optional argument INCLUDE-TYPE indicates to include the type of the defun.
 This function is compatible to be used as
 `add-log-current-defun-function' since it returns nil if point is
 not inside a defun."
-  (let ((names '()))
+  (let ((names '())
+        (min-indent))
     (save-restriction
       (widen)
       (save-excursion
-        (beginning-of-line)
-        (when (not (>= (current-indentation) python-indent-offset))
-          (while (and (not (eobp)) (forward-comment 1))))
-        (while (and (not (equal 0 (current-indentation)))
-                         (python-beginning-of-innermost-defun))
-          (back-to-indentation)
-          (looking-at "\\(?:def\\|class\\) +\\([^(]+\\)[^:]+:\\s-*\n")
-          (setq names (cons (match-string-no-properties 1) names)))))
+        (goto-char (line-end-position))
+        (forward-comment -1)
+        (while (python-beginning-of-defun-function 1 t)
+          (when (or (not min-indent)
+                    (< (current-indentation) min-indent))
+            (setq min-indent (current-indentation))
+            (looking-at python-nav-beginning-of-defun-regexp)
+            (setq names (cons
+                         (if (not include-type)
+                             (match-string-no-properties 1)
+                           (mapconcat 'identity
+                                      (split-string
+                                       (match-string-no-properties 0)) " "))
+                         names))))))
     (when names
       (mapconcat (lambda (string) string) names "."))))
 
@@ -2026,6 +2199,29 @@ character address of the specified TYPE."
       (t nil))))
 
 
+;;; Utility functions
+
+;; Stolen from GNUS
+(defun python-util-merge (type list1 list2 pred)
+  "Destructively merge lists LIST1 and LIST2 to produce a new list.
+Argument TYPE is for compatibility and ignored.
+Ordering of the elements is preserved according to PRED, a `less-than'
+predicate on the elements."
+  (let ((res nil))
+    (while (and list1 list2)
+      (if (funcall pred (car list2) (car list1))
+          (push (pop list2) res)
+        (push (pop list1) res)))
+    (nconc (nreverse res) list1 list2)))
+
+(defun python-util-position (item seq)
+  "Find the first occurrence of ITEM in SEQ.
+Return the index of the matching item, or nil if not found."
+  (let ((member-result (member item seq)))
+    (when member-result
+      (- (length seq) (length member-result)))))
+
+
 ;;;###autoload
 (define-derived-mode python-mode fundamental-mode "Python"
   "Major mode for editing Python files.
@@ -2060,6 +2256,8 @@ if that value is non-nil."
 
   (add-hook 'completion-at-point-functions
             'python-completion-complete-at-point nil 'local)
+
+  (setq imenu-create-index-function #'python-imenu-create-index)
 
   (set (make-local-variable 'add-log-current-defun-function)
        #'python-info-current-defun)
