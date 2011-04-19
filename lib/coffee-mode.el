@@ -1,3 +1,6 @@
+; From https://github.com/defunkt/coffee-mode
+; commit 1f9bc1a93e85eb70c461
+
 ;;; coffee-mode.el --- Major mode to edit CoffeeScript files in Emacs
 
 ;; Copyright (C) 2010 Chris Wanstrath
@@ -154,7 +157,7 @@ path."
      (apply 'make-comint "CoffeeREPL"
             coffee-command nil coffee-args-repl)))
 
-  (pop-to-buffer "*CoffeeScript*"))
+  (pop-to-buffer "*CoffeeREPL*"))
 
 (defun coffee-compile-file ()
   "Compiles and saves the current file to disk. Doesn't open in a buffer.."
@@ -197,9 +200,9 @@ path."
   (browse-url "http://jashkenas.github.com/coffee-script/"))
 
 (defun coffee-open-node-reference ()
-  "Open browser to node.js reference."
+  "Open browser to node.js documentation."
   (interactive)
-  (browse-url "http://nodejs.org/api.html"))
+  (browse-url "http://nodejs.org/docs/"))
 
 (defun coffee-open-github ()
   "Open browser to `coffee-mode' project on GithHub."
@@ -228,6 +231,9 @@ path."
 ;; Define Language Syntax
 ;;
 
+;; String literals
+(defvar coffee-string-regexp "\"\\([^\\]\\|\\\\.\\)*?\"\\|'\\([^\\]\\|\\\\.\\)*?'")
+
 ;; Instance variables (implicit this)
 (defvar coffee-this-regexp "@\\(\\w\\|_\\)*\\|this")
 
@@ -247,14 +253,14 @@ path."
 (defvar coffee-boolean-regexp "\\b\\(true\\|false\\|yes\\|no\\|on\\|off\\|null\\)\\b")
 
 ;; Regular Expressions
-(defvar coffee-regexp-regexp "\\/.+?\\/")
+(defvar coffee-regexp-regexp "\\/\\([^\\]\\|\\\\.\\)+?\\/")
 
 ;; JavaScript Keywords
 (defvar coffee-js-keywords
       '("if" "else" "new" "return" "try" "catch"
         "finally" "throw" "break" "continue" "for" "in" "while"
         "delete" "instanceof" "typeof" "switch" "super" "extends"
-        "class"))
+        "class" "until" "loop"))
 
 ;; Reserved keywords either by JS or CS.
 (defvar coffee-js-reserved
@@ -281,7 +287,8 @@ path."
   ;; *Note*: order below matters. `coffee-keywords-regexp' goes last
   ;; because otherwise the keyword "state" in the function
   ;; "state_entry" would be highlighted.
-  `((,coffee-this-regexp . font-lock-variable-name-face)
+  `((,coffee-string-regexp . font-lock-string-face)
+    (,coffee-this-regexp . font-lock-variable-name-face)
     (,coffee-prototype-regexp . font-lock-variable-name-face)
     (,coffee-assign-regexp . font-lock-type-face)
     (,coffee-regexp-regexp . font-lock-constant-face)
@@ -465,7 +472,7 @@ For detail, see `comment-dwim'."
     (if (bobp)
         0
       (progn
-        (while (coffee-line-empty-p) (forward-line -1))
+        (while (and (coffee-line-empty-p) (not (bobp))) (forward-line -1))
         (current-indentation)))))
 
 (defun coffee-line-empty-p ()
@@ -576,16 +583,15 @@ line? Returns `t' or `nil'. See the README for more details."
   ;; perl style comment: "# ..."
   (modify-syntax-entry ?# "< b" coffee-mode-syntax-table)
   (modify-syntax-entry ?\n "> b" coffee-mode-syntax-table)
+  (make-local-variable 'comment-start)
   (setq comment-start "#")
 
   ;; single quote strings
-  (modify-syntax-entry ?' "\"" coffee-mode-syntax-table)
   (modify-syntax-entry ?' "\"" coffee-mode-syntax-table)
 
   ;; indentation
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'coffee-indent-line)
-  (setq coffee-tab-width tab-width) ;; Just in case...
 
   ;; imenu
   (make-local-variable 'imenu-create-index-function)
