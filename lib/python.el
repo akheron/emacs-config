@@ -1,5 +1,5 @@
 ; https://github.com/fgallina/python.el
-; commit 211971d6 on 2011-04-11
+; commit 7a6bf360 on 2011-04-24
 
 ;;; python.el -- Python's flying circus support for Emacs
 
@@ -49,7 +49,12 @@
 ;; causes the current line to be dedented automatically if needed.
 
 ;; Movement: `beginning-of-defun' and `end-of-defun' functions are
-;; properly implemented.
+;; properly implemented.  Also there are specialized
+;; `forward-sentence' and `backward-sentence' replacements
+;; (`python-nav-forward-sentence', `python-nav-backward-sentence'
+;; respectively).  Extra functions `python-nav-sentence-start' and
+;; `python-nav-sentence-end' are included to move to the beginning and
+;; to the end of a setence while taking care of multiline definitions.
 
 ;; Shell interaction: is provided and allows you easily execute any
 ;; block of code of your current buffer in an inferior Python process.
@@ -60,7 +65,7 @@
 ;; IPython) it should be easy to integrate another way to calculate
 ;; completions.  You just need to specify your custom
 ;; `python-shell-completion-setup-code' and
-;; `python-shell-completion-string-code'
+;; `python-shell-completion-string-code'.
 
 ;; Here is a complete example of the settings you would use for
 ;; iPython
@@ -127,8 +132,8 @@
 ;; might guessed you should run `python-shell-send-buffer' from time
 ;; to time to get better results too.
 
-;; imenu: This mode supports imenu. It builds a plain or tree menu
-;; depending on the value of `python-imenu-make-tree'. Also you can
+;; imenu: This mode supports imenu.  It builds a plain or tree menu
+;; depending on the value of `python-imenu-make-tree'.  Also you can
 ;; customize if menu items should include its type using
 ;; `python-imenu-include-defun-type'.
 
@@ -192,6 +197,13 @@
 
 (defvar python-mode-map
   (let ((map (make-sparse-keymap)))
+    ;; Movement
+    (substitute-key-definition 'backward-sentence
+                               'python-nav-backward-sentence
+                               map global-map)
+    (substitute-key-definition 'forward-sentence
+                               'python-nav-forward-sentence
+                               map global-map)
     ;; Indent specific
     (define-key map "\177" 'python-indent-dedent-line-backspace)
     (define-key map (kbd "<backtab>") 'python-indent-dedent-line)
@@ -287,7 +299,7 @@
     "Additional Python specific sexps for `python-rx'"))
 
 (defmacro python-rx (&rest regexps)
- "Python mode especialized rx macro which supports common python named REGEXPS."
+ "Python mode specialized rx macro which supports common python named REGEXPS."
  (let ((rx-constituents (append python-rx-constituents rx-constituents)))
    (cond ((null regexps)
           (error "No regexp"))
@@ -510,7 +522,7 @@ These make `python-indent-calculate-indentation' subtract the value of
                        (not (python-info-ppss-context 'comment))
                        (progn
                          (goto-char (line-end-position))
-                         (forward-comment -1)
+                         (forward-comment -9999)
                          (eq ?: (char-before))))
               (setq found-block t)))
           (if (not found-block)
@@ -522,7 +534,7 @@ These make `python-indent-calculate-indentation' subtract the value of
                         (not (eobp)))
               (forward-line 1))
             (forward-line 1)
-            (forward-comment 1)
+            (forward-comment 9999)
             (let ((indent-offset (current-indentation)))
               (when (> indent-offset 0)
                 (setq python-indent-offset indent-offset))))))))
@@ -569,7 +581,7 @@ START is the buffer position where the sexp starts."
                        (let ((block-regexp (python-rx block-start))
                              (block-start-line-end ":[[:space:]]*$"))
                          (back-to-indentation)
-                         (while (and (forward-comment -1) (not (bobp))))
+                         (while (and (forward-comment -9999) (not (bobp))))
                          (back-to-indentation)
                          (when (or (python-info-continuation-line-p)
                                    (and (not (looking-at block-regexp))
@@ -592,15 +604,8 @@ START is the buffer position where the sexp starts."
          'after-beginning-of-block)
         ;; After normal line
         ((setq start (save-excursion
-                       (while (and (forward-comment -1) (not (bobp))))
-                       (while (and (not (back-to-indentation))
-                                   (not (bobp))
-                                   (if (python-info-ppss-context 'paren)
-                                       (forward-line -1)
-                                     (if (save-excursion
-                                           (forward-line -1)
-                                           (python-info-line-ends-backslash-p))
-                                         (forward-line -1)))))
+                       (while (and (forward-comment -9999) (not (bobp))))
+                       (python-nav-sentence-start)
                        (point-marker)))
          'after-line)
         ;; Do not indent
@@ -647,37 +652,51 @@ START is the buffer position where the sexp starts."
                      (back-to-indentation)
                      (when (looking-at "\\.")
                        (forward-line -1)
-                       (back-to-indentation)
-                       (forward-char (length
-                                      (with-syntax-table python-dotty-syntax-table
-                                        (current-word))))
-                       (re-search-backward "\\." (line-beginning-position) t 1)
-                       (current-column))))
-                  (indentation (cond (block-continuation
-                                      (goto-char block-continuation)
-                                      (re-search-forward
-                                       (python-rx block-start (* space))
-                                       (line-end-position) t)
-                                      (current-column))
-                                     (assignment-continuation
-                                      (goto-char assignment-continuation)
-                                      (re-search-forward
-                                       (python-rx simple-operator)
-                                       (line-end-position) t)
-                                      (forward-char 1)
-                                      (re-search-forward
-                                       (python-rx (* space))
-                                       (line-end-position) t)
-                                      (current-column))
-                                     (dot-continuation
-                                      dot-continuation)
-                                     (t
-                                      (goto-char context-start)
-                                      (current-indentation)))))
+                       (goto-char (line-end-position))
+                       (while (and (re-search-backward "\\." (line-beginning-position) t)
+                                   (or (python-info-ppss-context 'comment)
+                                       (python-info-ppss-context 'string)
+                                       (python-info-ppss-context 'paren))))
+                       (if (and (looking-at "\\.")
+                                (not (or (python-info-ppss-context 'comment)
+                                         (python-info-ppss-context 'string)
+                                         (python-info-ppss-context 'paren))))
+                           (current-column)
+                         (+ (current-indentation) python-indent-offset)))))
+                  (indentation (cond
+                                (dot-continuation
+                                 dot-continuation)
+                                (block-continuation
+                                 (goto-char block-continuation)
+                                 (re-search-forward
+                                  (python-rx block-start (* space))
+                                  (line-end-position) t)
+                                 (current-column))
+                                (assignment-continuation
+                                 (goto-char assignment-continuation)
+                                 (re-search-forward
+                                  (python-rx simple-operator)
+                                  (line-end-position) t)
+                                 (forward-char 1)
+                                 (re-search-forward
+                                  (python-rx (* space))
+                                  (line-end-position) t)
+                                 (current-column))
+                                (t
+                                 (goto-char context-start)
+                                 (if (not
+                                      (save-excursion
+                                        (back-to-indentation)
+                                        (looking-at
+                                         "\\(?:return\\|from\\|import\\)\s+")))
+                                     (current-indentation)
+                                   (+ (current-indentation)
+                                      (length
+                                       (match-string-no-properties 0))))))))
              indentation))
           ('inside-paren
            (or (save-excursion
-                 (forward-comment 1)
+                 (skip-syntax-forward "\s" (line-end-position))
                  (when (and (looking-at (regexp-opt '(")" "]" "}")))
                             (not (forward-char 1))
                             (not (python-info-ppss-context 'paren)))
@@ -692,10 +711,10 @@ START is the buffer position where the sexp starts."
                     (narrow-to-region
                      (line-beginning-position)
                      (line-end-position))
-                    (forward-comment 1))
+                    (forward-comment 9999))
                   (if (looking-at "$")
                       (+ (current-indentation) python-indent-offset)
-                    (forward-comment 1)
+                    (forward-comment 9999)
                     (current-column)))
                 (if (progn
                       (back-to-indentation)
@@ -708,14 +727,11 @@ START is the buffer position where the sexp starts."
   (let* ((indentation (python-indent-calculate-indentation))
          (remainder (% indentation python-indent-offset))
          (steps (/ (- indentation remainder) python-indent-offset)))
-    (setq python-indent-levels '(0))
+    (setq python-indent-levels (list 0))
     (dotimes (step steps)
-      (setq python-indent-levels
-            (cons (* python-indent-offset (1+ step)) python-indent-levels)))
+      (push (* python-indent-offset (1+ step)) python-indent-levels))
     (when (not (eq 0 remainder))
-      (setq python-indent-levels
-            (cons (+ (* python-indent-offset steps) remainder)
-                  python-indent-levels)))
+      (push (+ (* python-indent-offset steps) remainder) python-indent-levels))
     (setq python-indent-levels (nreverse python-indent-levels))
     (setq python-indent-current-level (1- (length python-indent-levels)))))
 
@@ -931,7 +947,7 @@ decorators are not included.  Return non-nil if point is moved to the
     (let ((found))
       (dotimes (i (- arg) found)
         (python-end-of-defun-function)
-        (forward-comment 1)
+        (forward-comment 9999)
         (goto-char (line-end-position))
         (when (not (eobp))
           (setq found
@@ -955,8 +971,56 @@ Returns nil if point is not in a def or class."
                 (not (eobp))
                 (or (not (current-word))
                     (> (current-indentation) beg-defun-indent))))
-    (forward-comment 1)
+    (forward-comment 9999)
     (goto-char (line-beginning-position))))
+
+(defun python-nav-sentence-start ()
+  "Move to start of current sentence."
+  (interactive "^")
+  (while (and (not (back-to-indentation))
+              (not (bobp))
+              (when (or
+                     (save-excursion
+                       (forward-line -1)
+                       (python-info-line-ends-backslash-p))
+                     (python-info-ppss-context 'string)
+                     (python-info-ppss-context 'paren))
+                  (forward-line -1)))))
+
+(defun python-nav-sentence-end ()
+  "Move to end of current sentence."
+  (interactive "^")
+  (while (and (goto-char (line-end-position))
+              (not (eobp))
+              (when (or
+                     (python-info-line-ends-backslash-p)
+                     (python-info-ppss-context 'string)
+                     (python-info-ppss-context 'paren))
+                  (forward-line 1)))))
+
+(defun python-nav-backward-sentence (&optional arg)
+  "Move backward to start of sentence.  With ARG, do it arg times.
+See `python-nav-forward-sentence' for more information."
+  (interactive "^p")
+  (or arg (setq arg 1))
+  (python-nav-forward-sentence (- arg)))
+
+(defun python-nav-forward-sentence (&optional arg)
+  "Move forward to next end of sentence.  With ARG, repeat.
+With negative argument, move backward repeatedly to start of sentence."
+  (interactive "^p")
+  (or arg (setq arg 1))
+  (while (> arg 0)
+    (forward-comment 9999)
+    (python-nav-sentence-end)
+    (forward-line 1)
+    (setq arg (1- arg)))
+  (while (< arg 0)
+    (python-nav-sentence-end)
+    (forward-comment -9999)
+    (python-nav-sentence-start)
+    (forward-line -1)
+    (setq arg (1+ arg))))
 
 
 ;;; Shell integration
@@ -1245,7 +1309,7 @@ the output."
             (with-temp-buffer
               (insert output-buffer)
               (goto-char (point-min))
-              (forward-comment 1)
+              (forward-comment 9999)
               (buffer-substring-no-properties
                (or
                 (and (looking-at python-shell-prompt-output-regexp)
@@ -2082,7 +2146,7 @@ not inside a defun."
       (widen)
       (save-excursion
         (goto-char (line-end-position))
-        (forward-comment -1)
+        (forward-comment -9999)
         (while (python-beginning-of-defun-function 1 t)
           (when (or (not min-indent)
                     (< (current-indentation) min-indent))
@@ -2203,10 +2267,10 @@ character address of the specified TYPE."
 
 ;; Stolen from GNUS
 (defun python-util-merge (type list1 list2 pred)
-  "Destructively merge lists LIST1 and LIST2 to produce a new list.
-Argument TYPE is for compatibility and ignored.
-Ordering of the elements is preserved according to PRED, a `less-than'
-predicate on the elements."
+  "Destructively merge lists to produce a new one.
+Argument TYPE is for compatibility and ignored.  LIST1 and LIST2
+are the list to be merged.  Ordering of the elements is preserved
+according to PRED, a `less-than' predicate on the elements."
   (let ((res nil))
     (while (and list1 list2)
       (if (funcall pred (car list2) (car list1))
