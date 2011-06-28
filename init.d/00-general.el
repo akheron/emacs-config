@@ -11,7 +11,7 @@
 (setq make-backup-files nil)
 (setq confirm-kill-emacs 'y-or-n-p)
 (setq default-tab-width 8)
-(setq user-mail-address "petri.lehtinen@inoi.fi")
+(setq user-mail-address "petri@digip.org")
 
 ;; Global modes
 (global-font-lock-mode 1)
