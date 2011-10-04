@@ -9,6 +9,7 @@
 ;(set-face-background 'ido-first-match "black")
 ;(set-face-foreground 'ido-subdir "dodger blue")
 (setq ido-show-dot-for-dired nil)
+(define-key ido-file-completion-map (kbd "C-w") 'backward-kill-word)
 
 (require 'smex)
 (smex-initialize)
