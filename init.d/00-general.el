@@ -3,7 +3,7 @@
 ;; set-buffer-file-coding-system
 ;;
 
-(add-to-list 'load-path "~/.elisp/lib/")
+(add-to-list 'load-path "~/.emacs-config/lib/")
 
 ;; Preferences
 (setq inhibit-startup-message 1)
