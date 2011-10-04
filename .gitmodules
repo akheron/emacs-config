@@ -1,6 +1,8 @@
 [submodule "lib/smex"]
 	path = lib/smex
 	url = git://github.com/nonsequitur/smex.git
+	update = merge
 [submodule "lib/python-mode"]
 	path = lib/python-mode
 	url = git://github.com/fgallina/python.el.git
+	update = merge
