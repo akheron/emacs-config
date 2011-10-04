@@ -6,3 +6,7 @@
 	path = lib/python-mode
 	url = git://github.com/fgallina/python.el.git
 	update = merge
+[submodule "lib/coffee-mode"]
+	path = lib/coffee-mode
+	url = git://github.com/defunkt/coffee-mode.git
+	update = merge
