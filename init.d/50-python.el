@@ -18,7 +18,7 @@
            (local-file (file-relative-name
                         temp-file
                         (file-name-directory buffer-file-name))))
-      (list "~/.elisp/bin/pychecker.sh" (list local-file))))
+      (list "~/.elisp/bin/pychecker.sh" (list virtualenv-dir local-file))))
   (add-to-list 'flymake-allowed-file-name-masks
                '("\\.py\\'" flymake-pyflakes-init))
 

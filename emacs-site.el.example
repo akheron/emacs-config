@@ -1,0 +1,3 @@
+;; Copy this file to ~/.emacs-site.el and customize
+
+(setq virtualenv-dir (expand-file-name "~/.virtualenvs/default"))

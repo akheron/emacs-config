@@ -1,8 +1,10 @@
 #!/bin/sh
+#
+# Usage: pychecker.sh PATH-TO-VIRTUALENV FILE-TO-CHECK
 
-. ~/local/virtualenvs/python2.6/bin/activate
+. $1/bin/activate
 
-pyflakes "$1"
-pep8 --ignore=E501 --repeat "$1"
+pyflakes "$2"
+pep8 --ignore=E501 --repeat "$2"
 
 true
