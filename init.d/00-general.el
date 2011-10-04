@@ -7,11 +7,9 @@
 
 ;; Preferences
 (setq inhibit-startup-message 1)
-(setq inhibit-startup-echo-area-message "petri")
 (setq make-backup-files nil)
 (setq confirm-kill-emacs 'y-or-n-p)
 (setq default-tab-width 8)
-(setq user-mail-address "petri@digip.org")
 
 ;; Global modes
 (global-font-lock-mode 1)

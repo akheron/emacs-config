@@ -1,3 +1,4 @@
 ;; Copy this file to ~/.emacs-site.el and customize
 
-(setq virtualenv-dir (expand-file-name "~/.virtualenvs/default"))
+(setq virtualenv-dir (expand-file-name "~/path-to-virtualenv"))
+(setq user-mail-address "user@example.com")
