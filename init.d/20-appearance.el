@@ -2,6 +2,7 @@
   ;; Window system present
   (progn
     (set-face-attribute 'default nil
+                        :font "ProggyClean"
                         :background "black"
                         :foreground "white")
     (set-face-attribute 'mode-line nil
