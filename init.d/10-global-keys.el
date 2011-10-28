@@ -31,6 +31,9 @@
 (global-set-key (kbd "M-;") 'beginning-of-buffer)
 (global-set-key (kbd "M-:") 'end-of-buffer)
 
+; see 50-buffers.el
+(global-set-key (kbd "C-x 4 t") 'transpose-buffers)
+
 (if window-system
   ;; Window system present
   (progn
