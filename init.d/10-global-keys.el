@@ -16,6 +16,9 @@
 
 (global-set-key (kbd "M--") 'dabbrev-expand)
 
+; Copy to clipboard
+(global-set-key (kbd "C-x M-w") 'clipboard-kill-ring-save)
+
 ; Unset harmful keys
 (global-unset-key (kbd "M-DEL"))
 ;(global-unset-key (kbd "<up>"))
