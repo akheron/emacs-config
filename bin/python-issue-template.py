@@ -20,7 +20,7 @@ else:
 
 with fobj:
     fobj.write('''\
-* %(title)s
+* #%(id)s: %(title)s
   http://bugs.python.org/issue%(id)d
 
   %%?''' % issue)
