@@ -26,3 +26,7 @@
 
 ;; By default, disable flymake for all files
 (setq flymake-allowed-file-name-masks '())
+
+;; Open links in Chromium
+(setq browse-url-browser-function 'browse-url-generic)
+(setq browse-url-generic-program "chromium-browser")
