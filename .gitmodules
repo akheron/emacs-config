@@ -10,3 +10,6 @@
 	path = lib/coffee-mode
 	url = git://github.com/defunkt/coffee-mode.git
 	update = merge
+[submodule "lib/org-mode"]
+	path = lib/org-mode
+	url = git://orgmode.org/org-mode.git
