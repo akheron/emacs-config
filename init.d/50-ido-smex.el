@@ -9,6 +9,7 @@
 ;(set-face-foreground 'ido-subdir "dodger blue")
 (setq ido-show-dot-for-dired nil)
 (setq ido-auto-merge-delay-time 1.50)
+(setq ido-max-directory-size 50000)
 (define-key ido-file-completion-map (kbd "C-w") 'backward-kill-word)
 
 (require 'smex)
