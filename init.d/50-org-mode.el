@@ -26,3 +26,7 @@
     (org-capture nil "pi"))
 
 (global-set-key "\C-cp" 'add-cpython-issue-note)
+
+(setq org-timer-default-timer 25)
+(add-hook 'org-timer-done-hook
+          (lambda () (play-sound-file "~/.emacs-config/data/ring.wav")))
