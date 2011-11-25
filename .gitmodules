@@ -13,3 +13,6 @@
 [submodule "lib/org-mode"]
 	path = lib/org-mode
 	url = git://orgmode.org/org-mode.git
+[submodule "lib/gist"]
+	path = lib/gist
+	url = git://github.com/defunkt/gist.el.git
