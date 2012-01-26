@@ -1,4 +1,8 @@
 (require 'ido)
+
+(require 'smex)
+(smex-initialize)
+
 (setq ido-create-new-buffer 'always)
 (setq ido-default-buffer-method 'selected-window)
 (setq ido-use-filename-at-point nil)
@@ -10,10 +14,8 @@
 (setq ido-show-dot-for-dired nil)
 (setq ido-auto-merge-delay-time 1.50)
 (setq ido-max-directory-size 50000)
-(define-key ido-file-completion-map (kbd "C-w") 'backward-kill-word)
+(define-key ido-file-completion-map (kbd "C-w") 'ido-delete-backward-word-updir)
 
-(require 'smex)
-(smex-initialize)
 (global-set-key (kbd "M-x") 'smex)
 (global-set-key (kbd "M-X") 'smex-major-mode-commands)
 ;; This is the old M-x.
