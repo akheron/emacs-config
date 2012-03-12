@@ -13,7 +13,11 @@
 
 (when (load "flymake" t)
   (defun flymake-pyflakes-init ()
-    (when (not (subsetp (list (current-buffer)) (tramp-list-remote-buffers)))
+    (when (if (boundp 'tramp-list-remote-buffers)
+              (not (subsetp
+                    (list (current-buffer))
+                    (tramp-list-remote-buffers)))
+            t)
       (let* ((temp-file (flymake-init-create-temp-buffer-copy
                          'flymake-create-temp-inplace))
              (local-file (file-relative-name
