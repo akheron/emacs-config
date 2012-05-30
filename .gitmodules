@@ -16,3 +16,6 @@
 [submodule "lib/gist"]
 	path = lib/gist
 	url = git://github.com/defunkt/gist.el.git
+[submodule "lib/yaml-mode"]
+	path = lib/yaml-mode
+	url = git://github.com/yoshiki/yaml-mode.git
