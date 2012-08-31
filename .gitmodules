@@ -19,3 +19,6 @@
 [submodule "lib/yaml-mode"]
 	path = lib/yaml-mode
 	url = git://github.com/yoshiki/yaml-mode.git
+[submodule "lib/less-css-mode"]
+	path = lib/less-css-mode
+	url = git://github.com/purcell/less-css-mode.git
