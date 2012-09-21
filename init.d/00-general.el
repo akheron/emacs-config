@@ -20,6 +20,7 @@
 (menu-bar-mode -1)
 (transient-mark-mode -1)
 (mouse-avoidance-mode 'jump)
+(subword-mode)
 
 ;; Disable abbrev-mode
 (setq-default abbrev-mode nil)
