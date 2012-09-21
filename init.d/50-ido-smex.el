@@ -9,12 +9,9 @@
 (ido-mode t)
 (ido-everywhere t)
 (setq ido-enable-flex-matching t) ;fuzzy matching
-;(set-face-background 'ido-first-match "black")
-;(set-face-foreground 'ido-subdir "dodger blue")
 (setq ido-show-dot-for-dired nil)
 (setq ido-auto-merge-delay-time 1.50)
 (setq ido-max-directory-size 50000)
-(define-key ido-file-completion-map (kbd "C-w") 'ido-delete-backward-word-updir)
 
 (global-set-key (kbd "M-x") 'smex)
 (global-set-key (kbd "M-X") 'smex-major-mode-commands)
