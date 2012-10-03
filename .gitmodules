@@ -22,3 +22,6 @@
 [submodule "lib/less-css-mode"]
 	path = lib/less-css-mode
 	url = git://github.com/purcell/less-css-mode.git
+[submodule "lib/emacs-iedit"]
+	path = lib/emacs-iedit
+	url = git://github.com/eproxus/emacs-iedit.git
