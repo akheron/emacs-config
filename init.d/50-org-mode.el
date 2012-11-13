@@ -1,5 +1,5 @@
 (add-to-list 'load-path "~/.emacs-config/lib/org-mode/lisp")
-(require 'org-install)
+(require 'org)
 
 (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
 
