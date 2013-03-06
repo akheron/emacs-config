@@ -25,3 +25,6 @@
 [submodule "lib/emacs-iedit"]
 	path = lib/emacs-iedit
 	url = git://github.com/eproxus/emacs-iedit.git
+[submodule "lib/emacs-git-gutter"]
+	path = lib/emacs-git-gutter
+	url = git://github.com/syohex/emacs-git-gutter
