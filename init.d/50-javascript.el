@@ -73,6 +73,8 @@
   (define-key js2-mode-map [(backspace)] 'c-electric-backspace)
   (define-key js2-mode-map [(control d)] 'c-electric-delete-forward)
   (define-key js2-mode-map [(control meta q)] 'my-indent-sexp)
+  (define-key js2-mode-map (kbd "C-c C-c") 'comment-region)
+  (define-key js2-mode-map (kbd "C-c C-u") 'uncomment-region)
   (if (featurep 'js2-highlight-vars)
     (js2-highlight-vars-mode))
 
