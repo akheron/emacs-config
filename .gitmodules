@@ -28,3 +28,6 @@
 [submodule "lib/emacs-git-gutter"]
 	path = lib/emacs-git-gutter
 	url = git://github.com/syohex/emacs-git-gutter
+[submodule "lib/js2-mode"]
+	path = lib/js2-mode
+	url = https://github.com/mooz/js2-mode
