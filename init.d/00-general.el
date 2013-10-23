@@ -25,6 +25,6 @@
 ;; Disable abbrev-mode
 (setq-default abbrev-mode nil)
 
-;; Open links in Chromium
+;; Open links in Google Chrome
 (setq browse-url-browser-function 'browse-url-generic)
-(setq browse-url-generic-program "chromium-browser")
+(setq browse-url-generic-program "google-chrome")
