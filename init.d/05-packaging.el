@@ -1,10 +1,7 @@
 (require 'package)
 
 ;; Add package archives.
-(add-to-list 'package-archives
-             '("marmalade" . "http://marmalade-repo.org/packages/") t)
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.milkbox.net/packages/") t)
+(setq package-archives '(("melpa" . "http://melpa.milkbox.net/packages/")))
 
 (package-initialize)
 
@@ -14,10 +11,16 @@
 (defvar my-packages
   '(coffee-mode
     git-gutter
-    ;js2-mode
+    js2-mode
+    rust-mode
     less-css-mode
     smex))
 
-(dolist (p my-packages)
-  (when (not (package-installed-p p))
-    (package-install p)))
+(let ((packages-updated nil))
+  (dolist (pkg my-packages)
+    (when (not (package-installed-p pkg))
+      (when (not packages-updated)
+        ; Refresh package archive the first time
+        (package-refresh-contents)
+        (setq packages-updated t))
+      (package-install pkg))))
