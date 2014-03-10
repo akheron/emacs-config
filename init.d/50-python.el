@@ -13,5 +13,4 @@
       (setq flycheck-python-flake8-executable
             (concat virtualenv-dir "/bin/flake8"))
       (electric-indent-local-mode -1)
-      (subword-mode)
-      (which-function-mode)))
+      (subword-mode)))
