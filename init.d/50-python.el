@@ -9,5 +9,6 @@
       (define-key python-mode-map (kbd "C-c C-u") 'uncomment-region)
       (define-key python-mode-map (kbd "C-c C-n") 'flymake-goto-next-error)
       (define-key python-mode-map (kbd "C-c C-p") 'flymake-goto-prev-error)
+      (electric-indent-local-mode -1)
       (subword-mode)
       (which-function-mode)))
