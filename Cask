@@ -18,8 +18,6 @@
 ; My deps
 (depends-on "coffee-mode")
 (depends-on "flycheck")
-(depends-on "gist")
-(depends-on "grizzl")
 (depends-on "git-gutter")
 (depends-on "grizzl")
 (depends-on "js2-mode")
