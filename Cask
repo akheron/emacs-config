@@ -23,5 +23,7 @@
 (depends-on "js2-mode")
 (depends-on "less-css-mode")
 (depends-on "less-css-mode")
+(depends-on "php-mode")
 (depends-on "rust-mode")
+(depends-on "web-mode")
 (depends-on "yaml-mode")
