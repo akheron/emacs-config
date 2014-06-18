@@ -20,6 +20,7 @@
 (depends-on "flycheck")
 (depends-on "git-gutter")
 (depends-on "grizzl")
+(depends-on "haskell-mode")
 (depends-on "js2-mode")
 (depends-on "less-css-mode")
 (depends-on "less-css-mode")
