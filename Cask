@@ -27,5 +27,6 @@
 (depends-on "less-css-mode")
 (depends-on "php-mode")
 (depends-on "rust-mode")
+(depends-on "scss-mode")
 (depends-on "web-mode")
 (depends-on "yaml-mode")
