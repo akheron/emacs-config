@@ -6,4 +6,6 @@
       (define-key js2-mode-map "\C-m" 'newline-and-indent)
       (define-key js2-mode-map (kbd "C-c C-c") 'comment-region)
       (define-key js2-mode-map (kbd "C-c C-u") 'uncomment-region)
+      (define-key js2-mode-map (kbd "C-c C-n") 'next-error)
+      (define-key js2-mode-map (kbd "C-c C-p") 'previous-error)
       (subword-mode)))
