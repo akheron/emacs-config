@@ -8,4 +8,5 @@
       (define-key js2-mode-map (kbd "C-c C-u") 'uncomment-region)
       (define-key js2-mode-map (kbd "C-c C-n") 'next-error)
       (define-key js2-mode-map (kbd "C-c C-p") 'previous-error)
+      (setq js2-basic-offset 2)
       (subword-mode)))
