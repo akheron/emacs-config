@@ -1,3 +1,4 @@
+(require 'cl)
 (require 'scss-mode)
 
 ; Disable flymake for .scss files
