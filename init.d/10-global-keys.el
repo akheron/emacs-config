@@ -16,6 +16,9 @@
 
 (global-set-key (kbd "M--") 'dabbrev-expand)
 
+(global-set-key (kbd "C-x n") 'other-window)
+(global-set-key (kbd "C-x p") '(lambda () (interactive) (other-window -1)))
+
 ; Copy to clipboard
 (global-set-key (kbd "C-x M-w") 'clipboard-kill-ring-save)
 
