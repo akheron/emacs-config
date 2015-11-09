@@ -9,7 +9,7 @@
 (setq inhibit-startup-message 1)
 (setq make-backup-files nil)
 (setq confirm-kill-emacs 'y-or-n-p)
-(setq default-tab-width 8)
+(setq tab-width 8)
 
 ;; Global modes
 (global-font-lock-mode 1)

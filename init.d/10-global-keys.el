@@ -15,9 +15,24 @@
 (global-set-key "\C-x\C-g" 'goto-line)
 
 (global-set-key (kbd "M--") 'dabbrev-expand)
+(global-set-key (kbd "C-M-y") 'clipboard-yank)
+
+(if window-system
+  ;; Window system present
+  (progn
+    ;; Disable iconifying with C-x C-z
+    (global-unset-key (kbd "C-x C-z")))
+
+  ;; Running in console
+  (progn
+    ;; Bind backward-delete-char to ^H
+    (global-set-key (kbd "C-h") 'backward-delete-char)))
 
 (global-set-key (kbd "C-x n") 'other-window)
 (global-set-key (kbd "C-x p") '(lambda () (interactive) (other-window -1)))
+(global-set-key (kbd "C-z") nil)
+(global-set-key (kbd "C-z n") 'other-window)
+(global-set-key (kbd "C-z p") '(lambda () (interactive) (other-window -1)))
 
 ; Copy to clipboard
 (global-set-key (kbd "C-x M-w") 'clipboard-kill-ring-save)
@@ -39,15 +54,3 @@
 
 ; see 50-buffers.el
 (global-set-key (kbd "C-x 4 t") 'transpose-buffers)
-
-(if window-system
-  ;; Window system present
-  (progn
-    ;; Disable suspending with C-z and iconifying with C-x C-z
-    (global-unset-key (kbd "C-z"))
-    (global-unset-key (kbd "C-x C-z")))
-
-  ;; Running in console
-  (progn
-    ;; Bind backward-delete-char to ^H
-    (global-set-key (kbd "C-h") 'backward-delete-char)))

@@ -1,3 +1,4 @@
-(require 'unfill)
-
-(global-set-key (kbd "C-M-q") 'unfill-paragraph)
+(use-package unfill
+  :ensure t
+  :commands unfill-paragraph
+  :bind ("C-M-q" . unfill-paragraph))
