@@ -1,5 +1,3 @@
-;(require 'cl)
-
 (use-package scss-mode
   :ensure t
   :mode "\\.scss$"
