@@ -1,5 +1,6 @@
 (use-package flycheck
   :ensure t
+  :defer 2
   :config
 
   ;; Only have flycheck bitching in left-fringe

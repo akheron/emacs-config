@@ -1,2 +1,3 @@
 (use-package magit
-  :ensure t)
+  :ensure t
+  :defer 2)
