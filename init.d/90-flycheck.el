@@ -1,6 +1,12 @@
+(use-package grizzl
+  :ensure t
+
+  ; Will be loaded by flycheck
+  :defer t)
+
+
 (use-package flycheck
   :ensure t
-  :defer 2
   :config
 
   ;; Only have flycheck bitching in left-fringe
@@ -18,22 +24,10 @@
                 (concat (expand-file-name virtualenv-dir) "/bin/flake8trunc"))
 
   ;; Disable elisp checker.
-  (eval-after-load 'flycheck
-    '(setq flycheck-checkers (delq 'emacs-lisp-checkdoc flycheck-checkers)))
+  (setq flycheck-checkers (delq 'emacs-lisp-checkdoc flycheck-checkers))
 
-  ;; JSX checker
-  (flycheck-define-checker javascript-jsxhint
-    "A JSX syntax and style checker using jsxhint."
-    :command ("jsxhint" "--checkstyle-reporter" "--es6module"
-             ; (config-file "--config" flycheck-jshintrc)
-              source)
-    :error-parser flycheck-parse-checkstyle
-    :error-filter flycheck-dequalify-error-ids
-    :modes (js-mode js2-mode js3-mode))
-
-  ;; Add javascript-jsxhint to the list of available checkers
-  (add-to-list 'flycheck-checkers 'javascript-jsxhint)
+  ;; Don't use a config file for eslint
+  (setq flycheck-eslintrc nil)
 
   (setq flycheck-display-errors-delay 0.1)
-
   (add-hook 'after-init-hook #'global-flycheck-mode))
