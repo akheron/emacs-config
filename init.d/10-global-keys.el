@@ -17,6 +17,9 @@
 (global-set-key (kbd "M--") 'dabbrev-expand)
 (global-set-key (kbd "C-M-y") 'clipboard-yank)
 
+; Disable compose-mail
+(global-set-key (kbd "C-x m") nil)
+
 (if window-system
   ;; Window system present
   (progn
