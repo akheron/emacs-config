@@ -31,11 +31,8 @@
     ;; Bind backward-delete-char to ^H
     (global-set-key (kbd "C-h") 'backward-delete-char)))
 
-(global-set-key (kbd "C-x n") 'other-window)
 (global-set-key (kbd "C-x p") '(lambda () (interactive) (other-window -1)))
 (global-set-key (kbd "C-z") nil)
-(global-set-key (kbd "C-z n") 'other-window)
-(global-set-key (kbd "C-z p") '(lambda () (interactive) (other-window -1)))
 
 ; Copy to clipboard
 (global-set-key (kbd "C-x M-w") 'clipboard-kill-ring-save)
