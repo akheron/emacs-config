@@ -2,4 +2,3 @@
 
 (setq virtualenv-dir "~/path-to-virtualenv")
 (setq user-mail-address "user@example.com")
-(setq shared-directory "~/Ubuntu One")
