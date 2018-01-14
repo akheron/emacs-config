@@ -29,5 +29,8 @@
 (setq browse-url-browser-function 'browse-url-generic)
 (setq browse-url-generic-program "google-chrome")
 
+;; Find executables in ~/local/bin
+(setq exec-path (cons "~/local/bin" exec-path))
+
 ;; Fix dead keys
 (require 'iso-transl)
