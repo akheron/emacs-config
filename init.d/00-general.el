@@ -34,3 +34,7 @@
 
 ;; Fix dead keys
 (require 'iso-transl)
+
+;; Save Customize variables to a separate file
+(setq custom-file "~/.emacs-config/custom.el")
+(load custom-file :noerror)
