@@ -13,9 +13,18 @@
                         :background "gray30"
                         :foreground "gray50"
                         :box nil)
-   (set-face-attribute 'cursor nil
+    (set-face-attribute 'cursor nil
                         :background "white"
-                        :foreground "black"))
+                        :foreground "black")
+
+    (defun toggle-font ()
+      (interactive)
+      (case (font-get (face-attribute 'default :font) :family)
+        ('ProggyCleanTT (set-face-attribute 'default nil
+                                             :font "ProggyClean"))
+        (t (set-face-attribute 'default nil
+                               :font "ProggyCleanTT"
+                               :height 150)))))
 
   ;; Running in console
   (progn
