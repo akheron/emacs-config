@@ -27,8 +27,9 @@
     ;; Disable elisp checker.
     (setq flycheck-checkers (delq 'emacs-lisp-checkdoc flycheck-checkers))
 
-    ;; Don't use a config file for eslint
-    (setq flycheck-eslintrc nil)
-
     (setq flycheck-display-errors-delay 0.1)
+
+    ;; Defined in 50-javascript.el
+    (add-hook 'flycheck-mode-hook #'use-js-executables-from-node-modules)
+
     (add-hook 'after-init-hook #'global-flycheck-mode)))
