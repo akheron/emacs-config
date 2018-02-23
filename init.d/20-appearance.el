@@ -1,10 +1,14 @@
 (if window-system
   ;; Window system present
-  (progn
+  (let ((font "ProggyClean"))
     (set-face-attribute 'default nil
-                        :font "ProggyClean"
+                        :font font
                         :background "black"
                         :foreground "white")
+    (set-face-attribute 'fixed-pitch nil
+                        :font font
+                        :background "black"
+                        :foreground "aquamarine")
     (set-face-attribute 'mode-line nil
                         :background "gray30"
                         :foreground "gray80"
