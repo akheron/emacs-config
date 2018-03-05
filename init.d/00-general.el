@@ -27,7 +27,7 @@
 
 ;; Open links in Google Chrome
 (setq browse-url-browser-function 'browse-url-generic)
-(setq browse-url-generic-program "google-chrome")
+(setq browse-url-generic-program "chromium")
 
 ;; Find executables in ~/local/bin
 (setq exec-path (cons "~/local/bin" exec-path))
