@@ -436,6 +436,12 @@ point reaches the beginning or end of the buffer, stop there."
             )
 )
 
+;; macrostep
+
+(use-package macrostep
+  :bind (:map emacs-lisp-mode-map
+              ("C-c e" . macrostep-expand)))
+
 ;; E-mail from mutt
 
 (add-to-list 'auto-mode-alist '("/tmp/mutt.*$" . mail-mode))
