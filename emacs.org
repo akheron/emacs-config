@@ -1,11 +1,15 @@
 * My emacs config
-** Misc
+
+Many ideas taken from https://github.com/Kaali/vj-emacs-0x12
+
+** Bootstrap
+*** Enable lexical binding
 
 #+BEGIN_SRC emacs-lisp
   ;;; -*- lexical-binding: t; -*-
 #+END_SRC
 
-Set =default-directory= and =load-path=
+*** Paths
 
 #+BEGIN_SRC emacs-lisp
   (eval-and-compile
@@ -19,30 +23,28 @@ Set =default-directory= and =load-path=
     (add-to-list 'load-path (akheron--config-path "lib")))
 #+END_SRC
 
-Save Customize variables to a separate file
+Find executables also in =~/local/bin=.
+
+#+BEGIN_SRC emacs-lisp
+  (setq exec-path (cons "~/local/bin" exec-path))
+#+END_SRC
+
+*** Customize
+
+Save Customize variables to a separate file.
 
 #+BEGIN_SRC emacs-lisp
   (setq custom-file (akheron--config-path "custom.el"))
   (load custom-file t)
 #+END_SRC
 
-Find executables also in =~/local/bin=
-
-#+BEGIN_SRC emacs-lisp
-  (setq exec-path (cons "~/local/bin" exec-path))
-#+END_SRC
-
-** package.el
+*** Package management
 
 #+BEGIN_SRC emacs-lisp
   (require 'package)
   (setq package-archives '(("melpa" . "http://melpa.org/packages/")))
   (package-initialize)
-#+END_SRC
 
-** use-package
-
-#+BEGIN_SRC emacs-lisp
   (unless (package-installed-p 'use-package)
     (package-refresh-contents)
     (package-install 'use-package))
@@ -51,14 +53,14 @@ Find executables also in =~/local/bin=
   (setq use-package-always-ensure t)
 #+END_SRC
 
-Used by use-package
+Needed by use-package
 
 #+BEGIN_SRC emacs-lisp
   (use-package diminish)
   (use-package bind-key)
 #+END_SRC
 
-** Effective Emacs
+** Global configuration
 
 Based on "Effective emacs": http://steve.yegge.googlepages.com/effective-emacs
 
