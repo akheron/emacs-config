@@ -304,15 +304,13 @@ Start server after initialization
 ** Clojure
 
 #+BEGIN_SRC emacs-lisp
-  (use-package cider
-    :ensure t)
+  (use-package cider)
 #+END_SRC
 
 ** CoffeeScript
 
 #+BEGIN_SRC emacs-lisp
   (use-package coffee-mode
-    :ensure t
     :config
     (setq coffee-tab-width 2)
     (add-hook 'coffee-mode-hook
@@ -349,7 +347,6 @@ Start server after initialization
 
 #+BEGIN_SRC emacs-lisp
   (use-package dockerfile-mode
-    :ensure t
     :mode "Dockerfile$")
 #+END_SRC
 
@@ -357,7 +354,6 @@ Start server after initialization
 
 #+BEGIN_SRC emacs-lisp
   (use-package elm-mode
-    :ensure t
     :config
     (add-hook 'elm-mode-hook
       #'(lambda ()
@@ -379,7 +375,6 @@ Start server after initialization
 
 #+BEGIN_SRC emacs-lisp
   (use-package git-gutter
-    :ensure t
     :config
     (global-git-gutter-mode t)
     (setq git-gutter:always-show-gutter t)
@@ -392,13 +387,11 @@ Start server after initialization
 
 #+BEGIN_SRC emacs-lisp
   (use-package haskell-mode
-    :ensure t
     :mode "\\.hs$"
     :config
     (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation))
 
   (use-package intero
-    :ensure t
     :config
     (add-hook 'haskell-model-hook 'intero-mode))
 #+END_SRC
@@ -407,7 +400,6 @@ Start server after initialization
 
 #+BEGIN_SRC emacs-lisp
   (use-package smex
-    :ensure t
     :demand
     :bind (("M-x" . smex)
            ("M-X" . smex-major-mode-commands))
@@ -415,7 +407,6 @@ Start server after initialization
     (smex-initialize))
 
   (use-package ido
-    :ensure t
     :config
     (setq ido-create-new-buffer 'always)
     (setq ido-default-buffer-method 'selected-window)
@@ -432,7 +423,6 @@ Start server after initialization
     (bind-key "C-c C-c M-x" 'execute-extended-command))
 
   (use-package idomenu
-    :ensure t
     :bind ("M-i" . idomenu))
 #+END_SRC
 
@@ -478,11 +468,9 @@ Increment/decrement integer at point
 
   ;; End of adapted
 
-  (use-package prettier-js
-    :ensure t)
+  (use-package prettier-js)
 
   (use-package js2-mode
-    :ensure t
     :mode "\\.js\\'"
     :config
     (setq-default js2-mode-show-parse-errors nil)
@@ -514,7 +502,6 @@ js-mode is used for JSON
 
 #+BEGIN_SRC emacs-lisp
   (use-package jinja2-mode
-    :ensure t
     :mode "\\.\\(jinja\\|j2\\)$")
 #+END_SRC
 
@@ -532,7 +519,6 @@ js-mode is used for JSON
 
 #+BEGIN_SRC emacs-lisp
   (use-package magit
-    :ensure t
     :defer 2)
 #+END_SRC
 
@@ -540,7 +526,6 @@ js-mode is used for JSON
 
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
-    :ensure t
     :mode "\\.md$")
 #+END_SRC
 
@@ -635,8 +620,7 @@ js-mode is used for JSON
 
 #+BEGIN_SRC emacs-lisp
   (use-package rust-mode
-    :mode "\\.rs$"
-    :ensure t)
+    :mode "\\.rs$")
 #+END_SRC
 
 ** SCSS
@@ -647,7 +631,6 @@ js-mode is used for JSON
       (setq-local css-indent-offset 2)))
 
   (use-package scss-mode
-    :ensure t
     :mode "\\.scss$"
     :config
     (add-hook 'css-mode-hook #'akheron--scss-init))
@@ -657,7 +640,6 @@ js-mode is used for JSON
 
 #+BEGIN_SRC emacs-lisp
   (use-package typescript-mode
-    :ensure t
     :mode "\\.ts\\'")
 
   (defun setup-tide-mode ()
@@ -673,7 +655,6 @@ js-mode is used for JSON
     (company-mode +1))
 
   (use-package tide
-    :ensure t
     :init (add-hook 'typescript-mode-hook #'setup-tide-mode))
 #+END_SRC
 
@@ -681,7 +662,6 @@ js-mode is used for JSON
 
 #+BEGIN_SRC emacs-lisp
   (use-package unfill
-    :ensure t
     :commands unfill-paragraph
     :bind ("C-M-q" . unfill-paragraph))
 #+END_SRC
@@ -719,7 +699,6 @@ Use 'foo|bar', 'foo|baz' style buffer naming
 
 #+BEGIN_SRC emacs-lisp
   (use-package yaml-mode
-    :ensure t
     :mode "\\.yml$")
 #+END_SRC
 
@@ -746,16 +725,12 @@ Use 'foo|bar', 'foo|baz' style buffer naming
 
 #+BEGIN_SRC emacs-lisp
   (use-package grizzl
-    :ensure t
-
     ; Will be loaded by flycheck
     :defer t)
 
 
   (use-package flycheck
-    :ensure t
     :config
-
     (let ((virtualenv-dir "~/.virtualenvs/emacs"))
       ;; Only have flycheck bitching in left-fringe
       (setq flycheck-highlighting-mode 'lines)
