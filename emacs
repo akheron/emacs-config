@@ -441,10 +441,9 @@ point reaches the beginning or end of the buffer, stop there."
   :bind (:map emacs-lisp-mode-map
               ("C-c e" . macrostep-expand)))
 
-;; E-mail from mutt
-
-(add-to-list 'auto-mode-alist '("/tmp/mutt.*$" . mail-mode))
-(add-hook 'mail-mode-hook 'turn-on-auto-fill)
+(use-package sendmail
+  :mode ("/tmp/mutt" . mail-mode)
+  :hook (mail-mode . turn-on-auto-fill))
 
 (use-package org
   :mode "\\.org$")
