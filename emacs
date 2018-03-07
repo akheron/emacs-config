@@ -29,6 +29,10 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+; Used by use-package
+(use-package diminish)
+(use-package bind-key)
+
 ;; Based on "Effective emacs"
 ;; http://steve.yegge.googlepages.com/effective-emacs
 (setq inhibit-startup-message 1)
@@ -56,59 +60,54 @@
 ;; Fix dead keys
 (require 'iso-transl)
 
-(global-set-key "\C-x\C-m" 'execute-extended-command)
-(global-set-key "\C-w" 'backward-kill-word)
-(global-set-key "\C-x\C-k" 'kill-region)
-(global-set-key "\M-r" 'isearch-backward-regexp)
-(global-set-key "\M-s" 'isearch-forward-regexp)
-(global-set-key [f5] 'call-last-kbd-macro)
+(bind-key "C-w" 'backward-kill-word)
+(bind-key "C-x C-k" 'kill-region)
+(bind-key "M-r" 'isearch-backward-regexp)
+(bind-key "M-s" 'isearch-forward-regexp)
+(bind-key "<f5>" 'call-last-kbd-macro)
 
-(global-set-key "\M-n" 'forward-paragraph)
-(global-set-key "\M-p" 'backward-paragraph)
-(global-set-key "\C-\M-n" '(lambda () (interactive) (forward-line 12)))
-(global-set-key "\C-\M-p" '(lambda () (interactive) (forward-line -12)))
-(global-set-key "\C-x\C-g" 'goto-line)
+(bind-key "M-n" 'forward-paragraph)
+(bind-key "M-p" 'backward-paragraph)
+(bind-key "C-M-n" (lambda () (interactive) (forward-line 12)))
+(bind-key "C-M-p" (lambda () (interactive) (forward-line -12)))
+(bind-key "C-x C-g" 'goto-line)
 
-(global-set-key (kbd "M--") 'dabbrev-expand)
-(global-set-key (kbd "C-M-y") 'clipboard-yank)
+(bind-key "M--" 'dabbrev-expand)
+(bind-key "C-M-y" 'clipboard-yank)
 
 ; Disable compose-mail
-(global-set-key (kbd "C-x m") nil)
+(bind-key "C-x m" nil)
 
 (if window-system
   ;; Window system present
   (progn
     ;; Disable iconifying with C-x C-z
-    (global-unset-key (kbd "C-x C-z")))
+    (bind-key "C-x C-z" nil))
 
   ;; Running in console
   (progn
     ;; Bind backward-delete-char to ^H
-    (global-set-key (kbd "C-h") 'backward-delete-char)))
+    (bind-key "C-h" 'backward-delete-char)))
 
-(global-set-key (kbd "C-x p") '(lambda () (interactive) (other-window -1)))
-(global-set-key (kbd "C-z") nil)
+(bind-key "C-x p" (lambda () (interactive) (other-window -1)))
+(bind-key "C-z" nil)
 
 ; Copy to clipboard
-(global-set-key (kbd "C-x M-w") 'clipboard-kill-ring-save)
+(bind-key "C-x M-w" 'clipboard-kill-ring-save)
 
 ; Unset harmful keys
-(global-unset-key (kbd "M-DEL"))
-;(global-unset-key (kbd "<up>"))
-;(global-unset-key (kbd "<down>"))
-;(global-unset-key (kbd "<left>"))
-;(global-unset-key (kbd "<right>"))
-(global-unset-key (kbd "C-<up>"))
-(global-unset-key (kbd "C-<down>"))
-(global-unset-key (kbd "C-<left>"))
-(global-unset-key (kbd "C-<right>"))
+(bind-key "M-DEL" nil)
+(bind-key "C-<up>" nil)
+(bind-key "C-<down>" nil)
+(bind-key "C-<left>" nil)
+(bind-key "C-<right>" nil)
 
 ; Imitate US keyboard layout
-(global-set-key (kbd "M-;") 'beginning-of-buffer)
-(global-set-key (kbd "M-:") 'end-of-buffer)
+(bind-key "M-;" 'beginning-of-buffer)
+(bind-key "M-:" 'end-of-buffer)
 
 ; see 50-buffers.el
-(global-set-key (kbd "C-x 4 t") 'transpose-buffers)
+(bind-key "C-x 4 t" 'transpose-buffers)
 
 ; Always display the result of C-x 4 f (find-file-in-other-window) et
 ; al. in an existing window
@@ -327,9 +326,9 @@ point reaches the beginning or end of the buffer, stop there."
   (setq ido-auto-merge-delay-time 1.50)
   (setq ido-max-directory-size 50000)
 
-  (global-set-key (kbd "M-X") 'smex-major-mode-commands)
+  (bind-key "M-X" 'smex-major-mode-commands)
   ;; This is the old M-x.
-  (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command))
+  (bind-key "C-c C-c M-x" 'execute-extended-command))
 
 (use-package idomenu
   :ensure t
@@ -551,7 +550,7 @@ buffer is not visiting a file."
     (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
 
 
-(global-set-key (kbd "C-x C-r") 'sudo-edit)
+(bind-key "C-x C-r" 'sudo-edit)
 
 (use-package grizzl
   :ensure t
