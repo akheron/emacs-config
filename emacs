@@ -446,7 +446,7 @@ point reaches the beginning or end of the buffer, stop there."
   :hook (mail-mode . turn-on-auto-fill))
 
 (use-package org
-  :mode "\\.org$")
+  :mode ("\\.org$" . org-mode))
 
 (use-package python
   :mode ("\\.py$" . python-mode)
