@@ -1,21 +1,41 @@
 ;; Link this file to ~/.emacs
 
-(setq default-directory "~/")
+(defvar akheron--config-root "~/.emacs-config"
+  "Root path of emacs config")
 
-;; Muistilappu:
-;;
-;; set-buffer-file-coding-system
-;;
+(defun akheron--config-path (path)
+  (expand-file-name (concat (file-name-as-directory akheron--config-root) path)))
 
-(add-to-list 'load-path "~/.emacs-config/lib/")
+(setq default-directory (expand-file-name "~/"))
+(add-to-list 'load-path (akheron--config-path "lib"))
 
-;; Preferences
+;; Save Customize variables to a separate file
+(setq custom-file (akheron--config-path "custom.el"))
+(load custom-file t)
+
+;; Find executables also in ~/local/bin
+(setq exec-path (cons "~/local/bin" exec-path))
+
+;; package.el
+(require 'package)
+(setq package-archives '(("melpa" . "http://melpa.org/packages/")))
+(package-initialize)
+
+;; use-package
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(require 'use-package)
+(setq use-package-always-ensure t)
+
+;; Based on "Effective emacs"
+;; http://steve.yegge.googlepages.com/effective-emacs
 (setq inhibit-startup-message 1)
 (setq make-backup-files nil)
 (setq confirm-kill-emacs 'y-or-n-p)
 (setq tab-width 8)
 
-;; Global modes
 (global-font-lock-mode 1)
 (line-number-mode 1)
 (column-number-mode 1)
@@ -33,28 +53,8 @@
 (setq browse-url-browser-function 'browse-url-generic)
 (setq browse-url-generic-program "chromium")
 
-;; Find executables in ~/local/bin
-(setq exec-path (cons "~/local/bin" exec-path))
-
 ;; Fix dead keys
 (require 'iso-transl)
-
-;; Save Customize variables to a separate file
-(setq custom-file "~/.emacs-config/custom.el")
-(load custom-file :noerror)
-
-(require 'package)
-
-(setq package-archives
-      '(("melpa" . "http://melpa.org/packages/")))
-
-(package-initialize)
-
-(eval-when-compile
-  (require 'use-package))
-
-;; Based on "Effective emacs"
-;; http://steve.yegge.googlepages.com/effective-emacs
 
 (global-set-key "\C-x\C-m" 'execute-extended-command)
 (global-set-key "\C-w" 'backward-kill-word)
@@ -261,6 +261,7 @@ point reaches the beginning or end of the buffer, stop there."
        (define-key diff-mode-map "\M-q" 'fill-paragraph)))
 
 (use-package django-html-mode
+  :ensure f  ;; installed in lib/
   :commands django-html-mode
   :config
   (add-hook 'django-html-mode-hook
@@ -335,6 +336,7 @@ point reaches the beginning or end of the buffer, stop there."
   :bind ("M-i" . idomenu))
 
 (use-package integers
+  :ensure f  ;; installed in lib/
   :bind (("C-c +" . increment-integer-at-point)
          ("C-c -" . decrement-integer-at-point)))
 
@@ -460,6 +462,7 @@ point reaches the beginning or end of the buffer, stop there."
 ;; Restructured text
 
 (use-package rst-mode
+  :ensure f  ;; installed in lib/
   :mode "\\.rst$"
   :config
   (add-hook 'rst-mode-hook 'turn-on-auto-fill)
@@ -511,6 +514,7 @@ point reaches the beginning or end of the buffer, stop there."
 ;; Use 'foo|bar', 'foo|baz' style buffer naming
 
 (use-package uniquify
+  :ensure f  ;; installed in lib/
   :config
   (setq uniquify-buffer-name-style 'post-forward))
 
