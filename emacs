@@ -1,3 +1,4 @@
+;; This line is intentionally commented out
 ;(package-initialize)
 
 (setq akheron--emacs-org "~/.emacs-config/emacs.org")

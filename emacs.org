@@ -2,6 +2,14 @@
 
 Many ideas taken from https://github.com/Kaali/vj-emacs-0x12
 
+** Usage
+
+#+BEGIN_EXAMPLE
+  cd $HOME
+  git clone https://github.com/akheron/emacs-config .emacs-config
+  ln -s .emacs-config/emacs .emacs
+#+END_EXAMPLE
+
 ** Bootstrap
 *** Enable lexical binding
 
