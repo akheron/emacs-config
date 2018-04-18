@@ -163,7 +163,8 @@ Global key bindings
 
 #+BEGIN_SRC emacs-lisp
   (load "darkplus-theme")
-  (set-face-attribute 'default nil :font "Monaco" :height 100)
+  (set-face-attribute 'default nil :font "Input" :height 90)
+
 #+END_SRC
 
 ** Don't rant about disabled functions
@@ -441,24 +442,22 @@ Increment/decrement integer at point
 
   (use-package prettier-js)
 
-  (use-package js2-mode
-    :mode "\\.js\\'"
+  (use-package rjsx-mode
+    :mode "\\.jsx?\\'"
+    :bind (("C-m" . newline-and-indent)
+           ("C-c C-c" . comment-region)
+           ("C-c C-u" . uncomment-region)
+           ("C-c C-n" . flycheck-next-error)
+           ("C-c C-p" . flycheck-previous-error))
     :config
     (setq-default js2-mode-show-parse-errors nil)
     (setq-default js2-mode-show-strict-warnings nil)
-    (add-hook 'js2-mode-hook '(lambda ()
-      (bind-key "C-m" 'newline-and-indent js2-mode-map)
-      (bind-key "C-c C-c" 'comment-region js2-mode-map)
-      (bind-key "C-c C-u" 'uncomment-region js2-mode-map)
-      (bind-key "C-c C-n" 'flycheck-next-error js2-mode-map)
-      (bind-key "C-c C-p" 'flycheck-previous-error js2-mode-map)
+    (add-hook 'rjsx-mode-hook #'(lambda ()
       (when-let ((prettier-executable (find-node-modules-executable "prettier")))
         (set (make-local-variable 'prettier-js-command) prettier-executable))
       (prettier-js-mode)
       (setq js2-basic-offset 2)
       (subword-mode))))
-
-  (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js2-jsx-mode))
 #+END_SRC
 
 ** JSON
