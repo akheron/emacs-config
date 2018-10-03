@@ -57,15 +57,11 @@ Save Customize variables to a separate file.
     (package-refresh-contents)
     (package-install 'use-package))
 
-  (require 'use-package)
+  (eval-when-compile
+    (require 'use-package))
+  (require 'diminish)
+  (require 'bind-key)
   (setq use-package-always-ensure t)
-#+END_SRC
-
-Needed by use-package
-
-#+BEGIN_SRC emacs-lisp
-  (use-package diminish)
-  (use-package bind-key)
 #+END_SRC
 
 ** Global configuration
@@ -157,14 +153,21 @@ Global key bindings
   (setq display-buffer-overriding-action '(display-buffer-use-some-window . ()))
 #+END_SRC
 
-** Themes
-
-[[https://github.com/dunstontc/darkplus-emacs][Dark+ theme]], [[https://github.com/todylu/monaco.ttf][Monaco font]]
+** Autorevert
 
 #+BEGIN_SRC emacs-lisp
-  (load "darkplus-theme")
-  (set-face-attribute 'default nil :font "Input" :height 90)
+  (global-auto-revert-mode 1)
+  (diminish 'auto-revert-mode)
+#+END_SRC
 
+** Themes
+
+Cobalt 2 theme, Fira Code font
+
+#+BEGIN_SRC emacs-lisp
+  (load "~/.emacs.d/cobalt2-theme")
+  (load-theme 'cobalt2 t)
+  (set-face-attribute 'default nil :font "Fira Code" :height 120)
 #+END_SRC
 
 ** Don't rant about disabled functions
@@ -263,6 +266,46 @@ Start server after initialization
         (setq arg (if (plusp arg) (1- arg) (1+ arg))))))
 #+END_SRC
 
+** Ivy
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ivy
+    :diminish ""
+    :init
+    (setq ivy-re-builders-alist '((t . ivy--regex-ignore-order)))
+    :config
+    (ivy-mode 1))
+#+END_SRC
+
+** Projectile
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ag
+    :defer 2)
+
+  (use-package projectile
+    :defer 2
+    :after ag
+    :diminish ""
+    :commands projectile-mode
+    :preface
+    (setq projectile-keymap-prefix (kbd "C-c p"))
+    :config
+    (setq projectile-completion-system 'ivy
+          projectile-enable-caching nil
+          projectile-indexing-method 'alien)
+    (projectile-mode))
+#+END_SRC
+
+** Try
+
+Try packages without installing them.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package try
+    :defer 3)
+#+END_SRC
+
 ** C/C++
 
 #+BEGIN_SRC emacs-lisp
@@ -283,6 +326,7 @@ Start server after initialization
 
 #+BEGIN_SRC emacs-lisp
   (use-package coffee-mode
+    :mode "\\.coffee\\'"
     :config
     (setq coffee-tab-width 2)
     (add-hook 'coffee-mode-hook
@@ -325,13 +369,26 @@ Start server after initialization
 ** Elm
 
 #+BEGIN_SRC emacs-lisp
+  (defun akheron--elm-mode-hook ()
+    (setq elm-indent-offset 4)
+    (setq elm-format-elm-version "0.19")
+    (setq elm-format-on-save t)
+    (subword-mode))
+
   (use-package elm-mode
     :config
-    (add-hook 'elm-mode-hook
-      #'(lambda ()
-          (setq elm-indent-offset 4)
-          (setq elm-format-elm-version "0.18")
-          (subword-mode))))
+    (add-hook 'elm-mode-hook #'akheron--elm-mode-hook))
+#+END_SRC
+
+** eshell
+
+Don't highlight trailing whitespace in eshell buffers.
+
+#+BEGIN_SRC emacs-lisp
+  (defun akheron--eshell-mode-hook ()
+    (setq show-trailing-whitespace nil))
+
+  (add-hook 'eshell-mode-hook #'akheron--eshell-mode-hook)
 #+END_SRC
 
 ** Frame title
@@ -347,6 +404,7 @@ Start server after initialization
 
 #+BEGIN_SRC emacs-lisp
   (use-package git-gutter
+    :diminish ""
     :config
     (global-git-gutter-mode t)
     (setq git-gutter:always-show-gutter t)
@@ -366,36 +424,6 @@ Start server after initialization
   (use-package intero
     :config
     (add-hook 'haskell-model-hook 'intero-mode))
-#+END_SRC
-
-** ido/smex
-
-#+BEGIN_SRC emacs-lisp
-  (use-package smex
-    :demand
-    :bind (("M-x" . smex)
-           ("M-X" . smex-major-mode-commands))
-    :config
-    (smex-initialize))
-
-  (use-package ido
-    :config
-    (setq ido-create-new-buffer 'always)
-    (setq ido-default-buffer-method 'selected-window)
-    (setq ido-use-filename-at-point nil)
-    (ido-mode t)
-    (ido-everywhere t)
-    (setq ido-enable-flex-matching t) ;fuzzy matching
-    (setq ido-show-dot-for-dired nil)
-    (setq ido-auto-merge-delay-time 1.50)
-    (setq ido-max-directory-size 50000)
-
-    (bind-key "M-X" 'smex-major-mode-commands)
-    ;; This is the old M-x.
-    (bind-key "C-c C-c M-x" 'execute-extended-command))
-
-  (use-package idomenu
-    :bind ("M-i" . idomenu))
 #+END_SRC
 
 ** integers
@@ -440,15 +468,20 @@ Increment/decrement integer at point
 
   ;; End of adapted
 
-  (use-package prettier-js)
+  (use-package prettier-js
+    :diminish "")
 
   (use-package rjsx-mode
     :mode "\\.jsx?\\'"
-    :bind (("C-m" . newline-and-indent)
+    :bind (:map rjsx-mode-map
+           ("C-m" . newline-and-indent)
            ("C-c C-c" . comment-region)
            ("C-c C-u" . uncomment-region)
            ("C-c C-n" . flycheck-next-error)
-           ("C-c C-p" . flycheck-previous-error))
+           ("C-c C-p" . flycheck-previous-error)
+           ("<" . nil)
+           (">" . nil)
+           ("C-d" . nil))
     :config
     (setq-default js2-mode-show-parse-errors nil)
     (setq-default js2-mode-show-strict-warnings nil)
@@ -466,6 +499,23 @@ js-mode is used for JSON
 
 #+BEGIN_SRC emacs-lisp
   (setq-default js-indent-level 2)
+#+END_SRC
+
+** PureScript
+
+#+BEGIN_SRC emacs-lisp
+  (use-package psc-ide)
+
+  (use-package purescript-mode
+    :mode "\\.purs$"
+    :after (psc-ide)
+    :config
+    (defun akheron--purescript-mode-hook ()
+      (psc-ide-mode)
+      (company-mode)
+      (turn-on-purescript-indentation))
+
+    (add-hook 'purescript-mode-hook #'akheron--purescript-mode-hook))
 #+END_SRC
 
 ** Jinja2
@@ -546,10 +596,21 @@ js-mode is used for JSON
 ** org-mode
 
 #+BEGIN_SRC emacs-lisp
+  ;; Compute working hours based on a time range
+  (defun akheron--working-hours ()
+    (interactive)
+    (flet ((org-make-tdiff-string (y d h m)
+              (if (or (> y 0) (> d 0))
+                  "Too long time range (over a day)"
+                (let ((hrs (- (+ (float h) (/ (float m) 60)) 0.5)))
+                  (format "%.2f" hrs)))))
+      (org-evaluate-time-range)))
+
   (use-package org
     :mode ("\\.org$" . org-mode)
     :config
-    (setq org-src-fontify-natively t))
+    (setq org-src-fontify-natively t)
+    (bind-key "C-c y" 'akheron--working-hours org-mode-map))
 #+END_SRC
 
 ** Python
@@ -647,6 +708,13 @@ Use 'foo|bar', 'foo|baz' style buffer naming
     (setq uniquify-buffer-name-style 'post-forward))
 #+END_SRC
 
+** wgrep
+
+#+BEGIN_SRC emacs-lisp
+  (use-package wgrep
+    :defer 5)
+#+END_SRC
+
 ** which-func
 
 #+BEGIN_SRC emacs-lisp
@@ -659,6 +727,7 @@ Use 'foo|bar', 'foo|baz' style buffer naming
 
 #+BEGIN_SRC emacs-lisp
   (use-package whitespace
+    :diminish ""
     :config
     (setq whitespace-line-column 78)
     (setq whitespace-style '(face lines-tail))
