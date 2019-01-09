@@ -574,7 +574,11 @@ js-mode is used for JSON
 
 #+BEGIN_SRC emacs-lisp
   (use-package magit
-    :bind ("C-x g" . magit-status))
+    :bind ("C-x g" . magit-status)
+    :config
+    (setq ediff-window-setup-function 'ediff-setup-windows-plain))
+
+  (use-package forge)
 #+END_SRC
 
 ** Markdown
