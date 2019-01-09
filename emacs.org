@@ -504,26 +504,28 @@ Increment/decrement integer at point
   (use-package prettier-js
     :diminish "")
 
-  (use-package rjsx-mode
-    :mode "\\.jsx?\\'"
-    :bind (:map rjsx-mode-map
+  (defun akheron--js2-mode-hook ()
+    (when-let ((prettier-executable (find-node-modules-executable "prettier")))
+      (set (make-local-variable 'prettier-js-command) prettier-executable))
+    (prettier-js-mode)
+    (setq js2-basic-offset 2)
+    (subword-mode))
+
+  (use-package js2-mode
+    :mode ("\\.jsx?\\'" . js2-jsx-mode)
+    :bind (:map js2-mode-map
            ("C-m" . newline-and-indent)
            ("C-c C-c" . comment-region)
            ("C-c C-u" . uncomment-region)
            ("C-c C-n" . flycheck-next-error)
-           ("C-c C-p" . flycheck-previous-error)
-           ("<" . nil)
-           (">" . nil)
-           ("C-d" . nil))
+           ("C-c C-p" . flycheck-previous-error))
+           ;("<" . nil)
+           ;(">" . nil)
+           ;("C-d" . nil))
     :config
     (setq-default js2-mode-show-parse-errors nil)
     (setq-default js2-mode-show-strict-warnings nil)
-    (add-hook 'rjsx-mode-hook #'(lambda ()
-      (when-let ((prettier-executable (find-node-modules-executable "prettier")))
-        (set (make-local-variable 'prettier-js-command) prettier-executable))
-      (prettier-js-mode)
-      (setq js2-basic-offset 2)
-      (subword-mode))))
+    (add-hook 'js2-mode-hook #'akheron--js2-mode-hook))
 #+END_SRC
 
 ** JSON
