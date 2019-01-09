@@ -145,6 +145,9 @@ Global key bindings
   (bind-key "M-;" 'beginning-of-buffer)
   (bind-key "M-:" 'end-of-buffer)
 
+  ; Open links browser
+  (bind-key "C-c C-o" 'browse-url-at-point)
+
   ; see 50-buffers.el
   (bind-key "C-x 4 t" 'transpose-buffers)
 
