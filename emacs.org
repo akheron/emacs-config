@@ -314,13 +314,12 @@ Start server after initialization
 
 #+BEGIN_SRC emacs-lisp
   (use-package ag
-    :defer 2)
+    :defer t)
 
   (use-package projectile
     :defer 2
-    :after ag
     :diminish ""
-    :commands projectile-mode
+    :commands (projectile-mode projectile-register-project-type)
     :preface
     (setq projectile-keymap-prefix (kbd "C-c p"))
     :config
@@ -548,6 +547,8 @@ js-mode is used for JSON
     (defun akheron--purescript-mode-hook ()
       (psc-ide-mode)
       (company-mode)
+      (bind-key "C-c C-n" 'flycheck-next-error)
+      (bind-key "C-c C-p" 'flycheck-previous-error)
       (turn-on-purescript-indentation))
 
     (add-hook 'purescript-mode-hook #'akheron--purescript-mode-hook))
