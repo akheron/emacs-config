@@ -272,12 +272,42 @@ Start server after initialization
 ** Ivy
 
 #+BEGIN_SRC emacs-lisp
-  (use-package ivy
-    :diminish ""
+  (defun akheron--ag-at-point ()
+    "Start `counsel-ag' with the symbol at point"
+    (interactive)
+    (counsel-ag (thing-at-point 'symbol t)))
+
+  (use-package el-patch)
+
+  ; Make counsel-find-file open the file in the window at point by
+  ; patching find-file.
+  ;
+  ; From https://emacs.stackexchange.com/questions/46327/migrated-from-emacs-25-to-26-1-cannot-force-find-file-counsel-projectile-find-f
+  ;
+  (el-patch-defun find-file (filename &optional wildcards)
+    (interactive
+     (find-file-read-args "Find file: "
+                          (confirm-nonexistent-file-or-buffer)))
+    (let ((value (find-file-noselect filename nil nil wildcards)))
+      (if (listp value)
+          (mapcar (el-patch-swap 'pop-to-buffer-same-window 'switch-to-buffer) (nreverse value))
+        ((el-patch-swap pop-to-buffer-same-window switch-to-buffer) value))))
+
+  (use-package counsel
+    :diminish ivy-mode
     :init
     (setq ivy-re-builders-alist '((t . ivy--regex-ignore-order)))
+    (setq ivy-use-virtual-buffers t)
+    (setq ivy-count-format "(%d/%d) ")
+    (setq ivy-height 25)
     :config
-    (ivy-mode 1))
+    (ivy-mode 1)
+    (bind-key "C-s" 'swiper)
+    (bind-key "M-x" 'counsel-M-x)
+    (bind-key "C-x C-f" 'counsel-find-file)
+    (bind-key "C-c g" 'counsel-git-grep)
+    (bind-key "C-c k" 'akheron--ag-at-point)
+    (bind-key "C-c C-k" 'counsel-ag))
 #+END_SRC
 
 ** Projectile
