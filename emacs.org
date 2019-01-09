@@ -616,6 +616,10 @@ js-mode is used for JSON
 ** Python
 
 #+BEGIN_SRC emacs-lisp
+  (use-package blacken)
+  (use-package py-isort)
+  (use-package flycheck-mypy)
+
   (use-package python
     :mode ("\\.py$" . python-mode)
     :config
@@ -629,7 +633,9 @@ js-mode is used for JSON
           (define-key python-mode-map (kbd "C-c C-n") 'flycheck-next-error)
           (define-key python-mode-map (kbd "C-c C-p") 'flycheck-previous-error)
           (electric-indent-local-mode -1)
-          (subword-mode))))
+          (subword-mode)
+          (blacken-mode)))
+    (add-hook 'before-save-hook 'py-isort-before-save))
 #+END_SRC
 
 ** ReStructured text
@@ -779,11 +785,6 @@ Use 'foo|bar', 'foo|baz' style buffer naming
 
       (setq-default flycheck-flake8rc
                     (expand-file-name "~/.emacs-config/conf/flake8rc"))
-
-      ;; Remember to copy ~/.emacs-config/bin/flake8trunc to the
-      ;; virtualenv's bin directory.
-      (setq-default flycheck-python-flake8-executable
-                    (concat (expand-file-name virtualenv-dir) "/bin/flake8trunc"))
 
       ;; Disable elisp checker.
       (setq flycheck-checkers (delq 'emacs-lisp-checkdoc flycheck-checkers))
