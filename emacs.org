@@ -636,21 +636,102 @@ js-mode is used for JSON
 ** org-mode
 
 #+BEGIN_SRC emacs-lisp
-  ;; Compute working hours based on a time range
-  (defun akheron--working-hours ()
+  (defun akheron--evaluate-time-range ()
+    (save-excursion
+      (unless (org-at-date-range-p t)
+        (goto-char (point-at-bol))
+        (re-search-forward org-tr-regexp-both (point-at-eol) t))
+      (unless (org-at-date-range-p t)
+        (user-error "Not at a time-stamp range, and none found in current line")))
+    (let* ((ts1 (match-string 1))
+           (ts2 (match-string 2))
+           (havetime (or (> (length ts1) 15) (> (length ts2) 15)))
+           (match-end (match-end 0))
+           (time1 (org-time-string-to-time ts1))
+           (time2 (org-time-string-to-time ts2))
+           (t1 (float-time time1))
+           (t2 (float-time time2))
+           (diff (abs (- t2 t1)))
+           (negative (< (- t2 t1) 0))
+           ;; (ys (floor (* 365 24 60 60)))
+           (ds (* 24 60 60))
+           (hs (* 60 60))
+           (fy "%dy %dd %02d:%02d")
+           (fy1 "%dy %dd")
+           (fd "%dd %02d:%02d")
+           (fd1 "%dd")
+           (fh "%02d:%02d")
+           y d h m align)
+      (if havetime
+          (setq ; y (floor (/ diff ys))  diff (mod diff ys)
+           y 0
+           d (floor (/ diff ds))  diff (mod diff ds)
+           h (floor (/ diff hs))  diff (mod diff hs)
+           m (floor (/ diff 60)))
+        (setq ; y (floor (/ diff ys))  diff (mod diff ys)
+         y 0
+         d (floor (+ (/ diff ds) 0.5))
+         h 0 m 0))
+      (list y d h m)))
+
+  (defun akheron--add-times (time1 time2)
+    (apply (lambda (y1 d1 h1 m1 y2 d2 h2 m2)
+             (let ((y (+ y1 y2))
+                   (d (+ d1 d2))
+                   (h (+ h1 h2))
+                   (m (+ m1 m2)))
+               (when (> m 60)
+                 (setq h (+ h 1)
+                       m (- m 60)))
+               (when (> h 24)
+                 (setq d (+ d 1)
+                       h (- h 24)))
+               (when (> d 365)
+                 (setq y (+ y 1)
+                       d (- d 365)))
+               (list y d h m)))
+           (append time1 time2)))
+
+  (defun akheron--make-working-hours-string (time)
+    (apply (lambda (y d h m)
+             (if (or (> y 0) (> d 0))
+                 "Too long time range (over a day)"
+               (let ((hrs (- (+ (float h) (/ (float m) 60)) 0.5)))
+                 (format "%.2f" hrs))))
+           time))
+
+  (defun akheron--working-hours-at-point ()
     (interactive)
-    (flet ((org-make-tdiff-string (y d h m)
-              (if (or (> y 0) (> d 0))
-                  "Too long time range (over a day)"
-                (let ((hrs (- (+ (float h) (/ (float m) 60)) 0.5)))
-                  (format "%.2f" hrs)))))
-      (org-evaluate-time-range)))
+    (message (akheron--make-working-hours-string (akheron--evaluate-time-range))))
+
+  (defun akheron--working-hours-at-line ()
+    (interactive)
+    (save-excursion
+      (let ((cumulative-time '(0 0 0 0))
+            (time-ranges 0))
+        (goto-char (point-at-bol))
+        (re-search-forward org-tr-regexp-both (point-at-eol) t)
+        (catch 'break
+          (while (org-at-date-range-p t)
+            (setq time-ranges (+ time-ranges 1)
+                  cumulative-time
+                  (akheron--add-times cumulative-time (akheron--evaluate-time-range)))
+            (when (eolp) (throw 'break nil))
+            (re-search-forward org-tr-regexp-both (point-at-eol) t)))
+        (if (equal cumulative-time '(0 0 0 0))
+            (message "No time range!")
+          (message "%s%s"
+                   (akheron--make-working-hours-string cumulative-time)
+                   (if (> time-ranges 1)
+                       (format " (%d time ranges)" time-ranges)
+                     ""))))))
 
   (use-package org
     :mode ("\\.org$" . org-mode)
     :config
     (setq org-src-fontify-natively t)
-    (bind-key "C-c y" 'akheron--working-hours org-mode-map))
+    (bind-key "C-c y" 'akheron--working-hours-at-line org-mode-map)
+    (bind-key "C-c C-y" 'akheron--working-hours-at-point org-mode-map))
 #+END_SRC
 
 ** Python
