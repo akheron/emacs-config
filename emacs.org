@@ -500,13 +500,26 @@ Increment/decrement integer at point
 
   ;; End of adapted
 
+  (defun akheron--maybe-use-prettier ()
+    (when-let ((prettier-executable (find-node-modules-executable "prettier")))
+      (set (make-local-variable 'prettier-js-command) prettier-executable)
+      (prettier-js-mode)))
+
+  (defun akheron--maybe-use-tide ()
+    (let ((tsconfig (locate-dominating-file (buffer-file-name) "tsconfig.json"))
+          (jsconfig (locate-dominating-file (buffer-file-name) "jsconfig.json")))
+      (when (or tsconfig jsconfig)
+        (tide-setup)
+        (eldoc-mode +1)
+        (tide-hl-identifier-mode +1)
+        (company-mode +1))))
+
   (use-package prettier-js
     :diminish "")
 
   (defun akheron--js2-mode-hook ()
-    (when-let ((prettier-executable (find-node-modules-executable "prettier")))
-      (set (make-local-variable 'prettier-js-command) prettier-executable))
-    (prettier-js-mode)
+    (akheron--maybe-use-prettier)
+    (akheron--maybe-use-tide)
     (setq js2-basic-offset 2)
     (subword-mode))
 
