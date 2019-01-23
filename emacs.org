@@ -571,6 +571,15 @@ js-mode is used for JSON
          (setq tex-close-quote "''")))
 #+END_SRC
 
+** Lilypond
+
+#+BEGIN_SRC emacs-lisp
+  (use-package lilypond-mode
+    :mode ("\\.ly\\'" . LilyPond-mode)
+    :commands LilyPond-mode
+    :ensure f)
+#+END_SRC
+
 ** magit
 
 #+BEGIN_SRC emacs-lisp
