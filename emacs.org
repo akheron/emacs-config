@@ -371,6 +371,14 @@ Try packages without installing them.
           (which-function-mode))))
 #+END_SRC
 
+** Company
+
+#+BEGIN_SRC emacs-lisp
+  (use-package company
+    :commands company-mode
+    :diminish company-mode)
+#+END_SRC
+
 ** Diff
 
 #+BEGIN_SRC emacs-lisp
@@ -803,6 +811,26 @@ js-mode is used for JSON
     :mode "\\.rs$")
 #+END_SRC
 
+** Scheme
+
+#+BEGIN_SRC emacs-lisp
+  (use-package paredit
+    :commands paredit-mode
+    :diminish paredit-mode
+    :config
+    (bind-key "M-;" 'beginning-of-buffer paredit-mode-map)
+    (bind-key "M-:" 'end-of-buffer paredit-mode-map))
+
+  (use-package geiser
+    :commands turn-on-geiser-mode)
+
+  (defun akheron--scheme-mode-hook ()
+    (enable-paredit-mode)
+    (turn-on-geiser-mode))
+
+  (add-hook 'scheme-mode-hook #'akheron--scheme-mode-hook)
+#+END_SRC
+
 ** SCSS
 
 #+BEGIN_SRC emacs-lisp
@@ -829,9 +857,6 @@ js-mode is used for JSON
     (setq flycheck-check-syntax-automatically '(save mode-enabled))
     (eldoc-mode +1)
     (tide-hl-identifier-mode +1)
-    ;; company is an optional dependency. You have to
-    ;; install it separately via package-install
-    ;; `M-x package-install [ret] company`
     (company-mode +1))
 
   (use-package tide
