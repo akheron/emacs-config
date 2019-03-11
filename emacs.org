@@ -431,6 +431,29 @@ Don't highlight trailing whitespace in eshell buffers.
   (add-hook 'eshell-mode-hook #'akheron--eshell-mode-hook)
 #+END_SRC
 
+** eww
+
+- Don't highlight trailing whitespace
+- Use fixed-pitch font for ~<code>~ tags
+
+#+BEGIN_SRC emacs-lisp
+  (defun akheron--eww-tag-code (dom)
+    (let ((start (point))
+          (text (dom-text dom)))
+      (insert text)
+      (add-face-text-property start (point) 'fixed-pitch)
+      (insert " ")))
+
+  (defun akheron--eww-mode-hook ()
+    (setq show-trailing-whitespace nil)
+    (add-to-list 'shr-external-rendering-functions
+                 '(code . akheron--eww-tag-code)))
+
+  (use-package eww
+    :config
+    (add-hook 'eww-mode-hook #'akheron--eww-mode-hook))
+#+END_SRC
+
 ** Frame title
 
 #+BEGIN_SRC emacs-lisp
@@ -514,14 +537,33 @@ Increment/decrement integer at point
       (when (or tsconfig jsconfig)
         (tide-setup)
         (eldoc-mode +1)
+        (diminish 'eldoc-mode)
         (tide-hl-identifier-mode +1)
         (company-mode +1))))
+
+  (defun akheron--js-enable-outline (map)
+    ;; Use outline-minor-mode to see an overview of tests
+    (outline-minor-mode +1)
+    (set (make-local-variable 'outline-regexp)
+         " *\\(describe\\|it\\)\\(\\.skip\\|\\.only\\)?(")
+    (set (make-local-variable 'outline-level)
+         #'(lambda ()
+             (let ((matched-heading (match-string 0)))
+               (if (string-match " *" matched-heading)
+                   ;; consider every 2 spaces in the beginning of a line
+                   ;; a level of outline
+                   (+ 1 (/ (length (match-string 0 matched-heading)) 2))
+                 0))))
+    (bind-key "C-c C-o" outline-mode-prefix-map map)
+    (diminish 'outline-minor-mode))
 
   (defun akheron--js2-mode-hook ()
     (akheron--maybe-use-prettier)
     (akheron--maybe-use-tide)
     (setq js2-basic-offset 2)
-    (subword-mode))
+    (subword-mode +1)
+    (diminish 'subword-mode)
+    (akheron--js-enable-outline js2-mode-map))
 
   (use-package js2-mode
     :mode ("\\.jsx?\\'" . js2-jsx-mode)
@@ -599,7 +641,10 @@ js-mode is used for JSON
   (use-package magit
     :bind ("C-x g" . magit-status)
     :config
-    (setq ediff-window-setup-function 'ediff-setup-windows-plain))
+    (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+
+    ;; Open browser for PR url in magit-process window
+    (bind-key "C-c C-o" 'browse-url-at-point magit-mode-map))
 
   (use-package forge)
 #+END_SRC
@@ -608,7 +653,9 @@ js-mode is used for JSON
 
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
-    :mode "\\.md$")
+    :mode "\\.md$"
+    :config
+    (setq markdown-command "markdown -f fencedcode"))
 #+END_SRC
 
 ** Modeline
@@ -799,8 +846,22 @@ js-mode is used for JSON
 ** Rust
 
 #+BEGIN_SRC emacs-lisp
+  (use-package cargo
+    :commands cargo-minor-mode)
+
+  (use-package racer
+    :commands racer-mode)
+
+  (defun akheron--rust-mode-hook ()
+    (rust-enable-format-on-save)
+    (cargo-minor-mode)
+    (racer-mode)
+    (company-mode))
+
   (use-package rust-mode
-    :mode "\\.rs$")
+    :mode "\\.rs$"
+    :config
+    (add-hook 'rust-mode-hook #'akheron--rust-mode-hook))
 #+END_SRC
 
 ** Scheme
@@ -826,33 +887,35 @@ js-mode is used for JSON
 ** SCSS
 
 #+BEGIN_SRC emacs-lisp
-  (defun akheron--scss-init ()
+  (defun akheron--scss-hook ()
     (when (equal (file-name-extension buffer-file-name) "scss")
       (setq-local css-indent-offset 2)))
 
   (use-package scss-mode
     :mode "\\.scss$"
     :config
-    (add-hook 'css-mode-hook #'akheron--scss-init))
+    (add-hook 'css-mode-hook #'akheron--scss-hook))
 #+END_SRC
 
 ** TypeScript
 
 #+BEGIN_SRC emacs-lisp
+  (use-package tide
+    :commands tide-setup)
+
   (use-package typescript-mode
-    :mode "\\.ts\\'")
+    :mode "\\.tsx?\\'"
+    :config
+    (add-hook 'typescript-mode-hook #'akheron--typescript-mode-hook))
 
   (defun akheron--typescript-mode-hook ()
     (setq typescript-indent-level 2)
     (tide-setup)
     (eldoc-mode +1)
     (tide-hl-identifier-mode +1)
-    (company-mode +1))
-
-  (use-package tide
-    :commands tide-setup
-    :config
-    (add-hook 'typescript-mode-hook #'akheron--typescript-mode-hook))
+    (company-mode +1)
+    (akheron--maybe-use-prettier)
+    (akheron--js-enable-outline typescript-mode-map))
 #+END_SRC
 
 ** unfill
@@ -933,15 +996,22 @@ Use 'foo|bar', 'foo|baz' style buffer naming
     ; Will be loaded by flycheck
     :defer t)
 
+  (use-package flycheck-rust
+    :commands flycheck-rust-setup)
 
   (defun akheron--use-js-executables-from-node-modules ()
     "Set executables of JS checkers from local node modules."
     (pcase-dolist (`(,checker . ,module) '((javascript-jshint . "jshint")
                                            (javascript-eslint . "eslint")
-                                           (javascript-jscs   . "jscs")))
+                                           (javascript-jscs   . "jscs")
+                                           (scss-stylelint    . "stylelint")))
       (when-let ((lint-executable (akheron--find-node-modules-executable module))
                  (executable-var (flycheck-checker-executable-variable checker)))
         (set (make-local-variable executable-var) lint-executable))))
+
+  (defun akheron--flycheck-mode-hook ()
+      (akheron--use-js-executables-from-node-modules)
+      (flycheck-rust-setup))
 
   (use-package flycheck
     :config
@@ -959,10 +1029,7 @@ Use 'foo|bar', 'foo|baz' style buffer naming
       (setq flycheck-checkers (delq 'emacs-lisp-checkdoc flycheck-checkers))
 
       (setq flycheck-display-errors-delay 0.1)
-
-      ;; Defined in 50-javascript.el
-      (add-hook 'flycheck-mode-hook #'akheron--use-js-executables-from-node-modules)
-
+      (add-hook 'flycheck-mode-hook #'akheron--flycheck-mode-hook)
       (add-hook 'after-init-hook #'global-flycheck-mode)))
 #+END_SRC
 
