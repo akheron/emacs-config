@@ -50,7 +50,9 @@ Save Customize variables to a separate file.
 
 #+BEGIN_SRC emacs-lisp
   (require 'package)
-  (setq package-archives '(("melpa" . "http://melpa.org/packages/")))
+  (setq package-archives
+        '(("melpa" . "http://melpa.org/packages/")
+          ("gnu" . "https://elpa.gnu.org/packages/")))
   (package-initialize)
 
   (unless (package-installed-p 'use-package)
